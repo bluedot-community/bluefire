@@ -1,0 +1,19 @@
+[package]
+name = "bluefire_twine"
+version = "0.1.0"
+authors = ["Wojciech Kluczka <wojciech.kluczka@gmail.com>"]
+edition = "2018"
+publish = false
+
+[features]
+default = []
+bson_conversion = ["bson"]
+
+[dependencies]
+checkmail = "0.1"
+hex = "0.3"
+rand = "0.5"
+serde = "1.0"
+
+bson = { version = "0.11", optional = true }
+

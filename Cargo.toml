@@ -1,0 +1,30 @@
+[workspace]
+
+members = [
+        "bluefire_languages",
+        "bluefire_translations",
+        "bluefire_translations_derive",
+
+        "bluefire_twine",
+
+        "bluefire_backend",
+        "bluefire_frontend",
+
+        "bluefire_protogen",
+        "bluefire_protogen_macros",
+    ]
+
+[patch.crates-io]
+
+bluefire_languages = { path = 'bluefire_languages' }
+bluefire_translations = { path = 'bluefire_translations' }
+bluefire_translations_derive = { path = 'bluefire_translations_derive' }
+
+bluefire_twine = { path = 'bluefire_twine' }
+
+bluefire_backend = { path = 'bluefire_backend' }
+bluefire_frontend = { path = 'bluefire_frontend' }
+
+bluefire_protogen = { path = 'bluefire_protogen' }
+bluefire_protogen_macros = { path = 'bluefire_protogen_macros' }
+

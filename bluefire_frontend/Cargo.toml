@@ -1,0 +1,55 @@
+[package]
+name = "bluefire_frontend"
+version = "0.1.0"
+authors = ["Wojciech Kluczka <wojciech.kluczka@gmail.com>"]
+edition = "2018"
+publish = false
+
+[features]
+default = []
+
+elements = ["maud", "wasm-bindgen", "web"]
+elements_all = ["elements", "elements_input", "elements_select", "elements_textarea"]
+elements_input = ["elements"]
+elements_select = ["elements"]
+elements_textarea = ["elements"]
+
+authentication = ["cookies"]
+cookies = ["chrono", "web-sys", "wasm-bindgen", "web"]
+fetch = ["js-sys", "web-sys", "authentication", "bluefire_twine"]
+flow = ["js-sys", "wasm-bindgen", "web-sys", "web"]
+flowex = ["web", "flow"]
+web = ["web-sys"]
+
+[dependencies.chrono]
+version = "0.4"
+optional = true
+
+[dependencies.wasm-bindgen]
+version = "0.2.29"
+optional = true
+features = ["serde-serialize", "nightly"]
+
+[dependencies.js-sys]
+version = "0.3.6"
+optional = true
+
+[dependencies.web-sys]
+version = "0.3.6"
+optional = true
+features = [
+    "Window", "Document", "HtmlDocument", "Location", "History",
+    "Node", "Element", "EventListener", "EventTarget", "DomTokenList",
+    "HtmlElement", "HtmlInputElement", "HtmlSelectElement", "HtmlTextAreaElement",
+    "Request", "RequestInit", "Response", "Headers",
+    "console"
+]
+
+[dependencies.maud]
+version = "0.19"
+optional = true
+
+[dependencies.bluefire_twine]
+version = "0.1.0"
+optional = true
+

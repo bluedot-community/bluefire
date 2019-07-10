@@ -1,0 +1,6 @@
+lang_code: en
+translations:
+ msg1:
+  text: "Message 1"
+ msg2:
+  text: "Message 2"

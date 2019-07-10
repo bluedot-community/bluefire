@@ -1,0 +1,42 @@
+[package]
+name = "bluefire_backend"
+version = "0.1.0"
+authors = ["Wojciech Kluczka <wojciech.kluczka@gmail.com>"]
+edition = "2018"
+publish = false
+
+[features]
+default = []
+
+authentication = ["base64", "database", "rand", "rust-crypto", "bluefire_twine"]
+database = []
+database_mongodb = ["database", "bson", "mongo_driver"]
+database_postgresql = ["database", "postgres"]
+email = ["lettre", "lettre_email", "uuid"]
+rest = []
+router = []
+scheduler = []
+server = ["futures", "hyper"]
+translations = ["bluefire_translations"]
+
+[dependencies]
+chrono = { version = "0.4" }
+http = { version = "0.1" }
+log = { version = "0.4" }
+traitobject = { version = "0.1" }
+
+base64 = { version = "0.9", optional = true }
+bson = { version = "0.11", optional = true }
+futures = { version = "0.1", optional = true }
+hyper = { version = "0.12", optional = true }
+lettre = { version = "0.9", optional = true }
+lettre_email = { version = "0.9", optional = true }
+mongo_driver = { version = "0.12", optional = true }
+postgres = { version = "0.15", optional = true }
+rand = { version = "0.5", optional = true }
+rust-crypto = { version = "0.2", optional = true }
+uuid = { version = "0.7", optional = true, features = ["v4"] }
+
+bluefire_twine = { version = "0.1.0", optional = true }
+bluefire_translations = { version = "0.1.0", optional = true }
+

@@ -1,0 +1,2 @@
+This file is here for testing purposes. It does not have 'yaml' extension so it should be skipped in
+tests of reading the directory.
