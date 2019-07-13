@@ -40,6 +40,35 @@ impl RustGenerator {
         self.gen_routes(&routes);
         self.get_content()
     }
+
+    /// Generate API from given input file and save to the given output file.
+    pub fn generate_api_file(input: &str, output: &str) {
+        use std::io::Write;
+
+        let output_dir = std::env::var("OUT_DIR").expect("Read OUT_DIR variable");
+        let input_dir = std::env::var("CARGO_MANIFEST_DIR")
+            .expect("Cargo manifest directory not provided");
+
+        let mut input_path = std::path::PathBuf::new();
+        input_path.push(&input_dir);
+        input_path.push(input);
+
+        let mut output_path = std::path::PathBuf::new();
+        output_path.push(&output_dir);
+        output_path.push(output);
+
+        let api_str = std::fs::read_to_string(input_path.clone())
+            .expect(&format!("Read file: {:?}", input_path));
+        let api = spec::Api::from_str(&api_str)
+            .expect(&format!("Parse {:?} spec file", input_path));
+
+        let generator = RustGenerator::new();
+        let result = generator.generate_api(&api);
+
+        let mut file = std::fs::File::create(&output_path)
+            .expect(&format!("Create file: {:?}", &output_path));
+        file.write_all(result.as_bytes()).expect(&format!("Write to file: {:?}", &output_path));
+    }
 }
 
 // Public helper methods
