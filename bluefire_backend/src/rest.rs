@@ -11,6 +11,10 @@ use crate::context::BlueFire;
 // -------------------------------------------------------------------------------------------------
 
 /// Trait for simple REST handlers.
+///
+/// The result of handler methods has `Response` in both `Ok` and `Err` part. It's just a
+/// simplification in case if the user wants to use `?` operator in the handler methods, and this
+/// crate treads both parts the same way.
 pub trait SimpleRestHandler: Handler {
     /// Builds a response for not allowed method. The default implementation builds a response with
     /// empty body.
@@ -23,39 +27,39 @@ pub trait SimpleRestHandler: Handler {
 
     /// Options method request handler. The default implementation builds a response allowing the
     /// access from any origin and using any method.
-    fn options(&self, _context: &BlueFire, _request: &Request) -> Response {
-        http::response::Builder::new()
+    fn options(&self, _context: &BlueFire, _request: &Request) -> Result<Response, Response> {
+        Ok(http::response::Builder::new()
             .status(http::StatusCode::OK)
             .header(http::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
             .header(http::header::ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, PATCH, DELETE")
             .header(http::header::ACCESS_CONTROL_ALLOW_HEADERS, BLUEFIRE_TOKEN_HEADER)
             .body(String::new())
-            .expect("Build OPTIONS response body")
+            .expect("Build OPTIONS response body"))
     }
 
     /// Get method request handler. The default implementation returns "method not allowed".
-    fn get(&self, _context: &BlueFire, request: &Request) -> Response {
-        self.make_method_not_allowed_response(request)
+    fn get(&self, _context: &BlueFire, request: &Request) -> Result<Response, Response> {
+        Ok(self.make_method_not_allowed_response(request))
     }
 
     /// Post method request handler. The default implementation returns "method not allowed".
-    fn post(&self, _context: &BlueFire, request: &Request) -> Response {
-        self.make_method_not_allowed_response(request)
+    fn post(&self, _context: &BlueFire, request: &Request) -> Result<Response, Response> {
+        Ok(self.make_method_not_allowed_response(request))
     }
 
     /// Put method request handler. The default implementation returns "method not allowed".
-    fn put(&self, _context: &BlueFire, request: &Request) -> Response {
-        self.make_method_not_allowed_response(request)
+    fn put(&self, _context: &BlueFire, request: &Request) -> Result<Response, Response> {
+        Ok(self.make_method_not_allowed_response(request))
     }
 
     /// Patch method request handler. The default implementation returns "method not allowed".
-    fn patch(&self, _context: &BlueFire, request: &Request) -> Response {
-        self.make_method_not_allowed_response(request)
+    fn patch(&self, _context: &BlueFire, request: &Request) -> Result<Response, Response> {
+        Ok(self.make_method_not_allowed_response(request))
     }
 
     /// Delete method request handler. The default implementation returns "method not allowed".
-    fn delete(&self, _context: &BlueFire, request: &Request) -> Response {
-        self.make_method_not_allowed_response(request)
+    fn delete(&self, _context: &BlueFire, request: &Request) -> Result<Response, Response> {
+        Ok(self.make_method_not_allowed_response(request))
     }
 }
 
@@ -64,14 +68,18 @@ where
     T: SimpleRestHandler + Clone + 'static,
 {
     fn handle(&self, context: &BlueFire, request: &Request) -> Response {
-        match request.method() {
+        let result = match request.method() {
             &http::method::Method::OPTIONS => self.options(context, request),
             &http::method::Method::GET => self.get(context, request),
             &http::method::Method::POST => self.post(context, request),
             &http::method::Method::PUT => self.put(context, request),
             &http::method::Method::PATCH => self.patch(context, request),
             &http::method::Method::DELETE => self.delete(context, request),
-            _ => self.make_method_not_allowed_response(request),
+            _ => return self.make_method_not_allowed_response(request),
+        };
+        match result {
+            Ok(response) => response,
+            Err(response) => response,
         }
     }
 

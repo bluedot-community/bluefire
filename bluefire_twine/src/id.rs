@@ -3,6 +3,8 @@
 
 //! Implementation of 12 byte ID data structure.
 
+// TODO: Add tests.
+
 use rand::RngCore;
 use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
 
@@ -100,6 +102,12 @@ impl<'de> Deserialize<'de> for Id {
     }
 }
 
+impl std::cmp::PartialEq<str> for Id {
+    fn eq(&self, other: &str) -> bool {
+        self.to_hex() == *other
+    }
+}
+
 #[cfg(feature = "bson_conversion")]
 impl From<Id> for bson::oid::ObjectId {
     fn from(id: Id) -> bson::oid::ObjectId {
@@ -113,3 +121,4 @@ impl From<bson::oid::ObjectId> for Id {
         Id::from_str(&oid.to_hex()).expect("Cast from bson ObjectId to bluefire Id")
     }
 }
+
