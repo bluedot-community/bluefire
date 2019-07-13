@@ -23,6 +23,7 @@ impl RustGenerator {
         self.gen_imports();
         self.gen_types(&api.types);
         self.gen_paths(&api.routes);
+        self.gen_yields(&api.yields);
         self.gen_reasons(&api.reasons);
         self.gen_methods(&api);
         self.get_content()
@@ -80,7 +81,7 @@ impl RustGenerator {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // TYPES
+    // Types
 
     fn gen_types(&mut self, types: &Vec<spec::TypeDef>) {
         for type_iter in types.iter() {
@@ -258,6 +259,15 @@ impl RustGenerator {
         self.buffer.decrease_indent();
         self.buffer.push_line("}");
         self.buffer.new_line();
+    }
+
+    fn gen_members(&mut self, members: &Vec<spec::Member>) {
+        self.buffer.increase_indent();
+        for member in members.iter() {
+            let (name, formated_type) = Self::format_member(&member);
+            self.buffer.push_line(&format!("pub {}: {},", name.snake_case(), formated_type));
+        }
+        self.buffer.decrease_indent();
     }
 
     fn gen_union_type(&mut self, name: &str, members: &Vec<spec::Member>) {
@@ -458,13 +468,95 @@ impl RustGenerator {
     }
 
     // ---------------------------------------------------------------------------------------------
+    // Yields
+
+    fn gen_yields(&mut self, yields: &Vec<spec::Yield>) {
+        for yeeld in yields.iter() {
+            let name = utils::camel_case(&yeeld.name) + "Yield";
+            self.gen_yield_struct(&name, &yeeld);
+        }
+    }
+
+    fn gen_yield_struct(&mut self, name: &str, yeeld: &spec::Yield) {
+        self.push_derive_line();
+        self.buffer.push_line(&format!("pub struct {} {{", name));
+        self.gen_pub_args(&yeeld.args);
+        self.buffer.push_line("}");
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Reasons
 
     fn gen_reasons(&mut self, reasons: &Vec<spec::Reason>) {
         for reason in reasons.iter() {
-            let name = utils::camel_case(&reason.name);
-            self.gen_reason_enum(name.clone(), &reason.cases);
+            let name = utils::camel_case(&reason.name) + "Reason";
+            self.gen_reason_enum(&name, &reason.cases);
+            self.gen_reason_impl(&name, &reason.cases);
+            self.gen_reason_conversions(&name);
         }
     }
+
+    fn gen_reason_enum(&mut self, name: &str, cases: &Vec<spec::Case>) {
+        self.push_derive_line();
+        self.buffer.push_line(&format!("pub enum {} {{", name));
+        self.buffer.increase_indent();
+        for case in cases.iter() {
+            let name = utils::Name::new(&case.name);
+            let (snake, camel) = (name.snake_case(), name.camel_case());
+            self.buffer.push_line(&format!("#[serde(rename = \"{}\")]", snake));
+            if case.args.len() > 0 {
+                self.buffer.push_line(&format!("{} {{", camel));
+                self.gen_args(&case.args);
+                self.buffer.push_line("},");
+            } else {
+                self.buffer.push_line(&format!("{},", camel));
+            }
+        }
+        self.buffer.decrease_indent();
+        self.buffer.push_line("}");
+        self.buffer.new_line();
+    }
+
+    fn gen_reason_impl(&mut self, name: &str, cases: &Vec<spec::Case>) {
+        self.buffer.push_line(&format!("impl {} {{", name));
+        self.buffer.increase_indent();
+        self.buffer.push_line("pub fn get_code(&self) -> http::StatusCode {");
+        self.buffer.increase_indent();
+        self.buffer.push_line("match self {");
+        self.buffer.increase_indent();
+        for case in cases.iter() {
+            let case_name = utils::camel_case(&case.name);
+            let code = Self::format_code(&case.code);
+            self.buffer.push_line(&format!("{}::{} {{ .. }} => {},", name, case_name, code));
+        }
+        self.buffer.decrease_indent();
+        self.buffer.push_line("}");
+        self.buffer.decrease_indent();
+        self.buffer.push_line("}");
+        self.buffer.decrease_indent();
+        self.buffer.push_line("}");
+    }
+
+    fn gen_reason_conversions(&mut self, name: &str) {
+        self.buffer.push_multiline(&format!(
+            "
+            impl From<{name}> for http::Response<String> {{
+                fn from(reason: {name}) -> http::Response<String> {{
+                    let mut value = serde_json::to_value(&reason).expect(\"Serialize response to JSON Value\");
+                    let object = value.as_object_mut().expect(\"As JSON object\");
+                    object.insert(\"_variant\".to_string(), serde_json::Value::String(\"failure\".to_string()));
+
+                    http::response::Builder::new()
+                        .status(reason.get_code())
+                        .header(http::header::ACCESS_CONTROL_ALLOW_ORIGIN, \"*\")
+                        .body(serde_json::to_string(&value).expect(\"Serialize response to JSON\"))
+                        .expect(\"Build response\")
+                }}
+            }}", name = name));
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Methods
 
     fn gen_methods(&mut self, proto: &spec::Api) {
         for method in proto.methods.iter() {
@@ -475,7 +567,7 @@ impl RustGenerator {
             self.gen_request_struct(&method.request, &request_name);
             self.gen_request_impl(&method.request, &request_name, &proto.types);
             self.gen_response_enum(&method.response, &response_name);
-            self.gen_response_impl(&method.response, &response_name, &proto.reasons);
+            self.gen_response_impl(&method.response, &response_name, &proto.yields, &proto.reasons);
             self.gen_method(&method);
         }
     }
@@ -494,26 +586,20 @@ impl RustGenerator {
     }
 
     fn gen_response_enum(&mut self, response: &spec::Response, name: &str) {
-        let failure_camel = utils::camel_case(&response.failure_reason) + "Reason";
-        let error_camel = utils::camel_case(&response.error_reason) + "Reason";
+        let success_camel = utils::camel_case(&response.success) + "Yield";
+        let failure_camel = utils::camel_case(&response.failure) + "Reason";
+        let error_camel = utils::camel_case(&response.error) + "Reason";
         self.push_derive_line();
-        self.buffer.push_line(&format!("pub enum {} {{", name));
-        self.buffer.increase_indent();
-        self.buffer.push_line("#[serde(rename = \"success\")]");
-        self.buffer.push_line("Success {");
-        self.buffer.increase_indent();
-        for arg in response.args.iter() {
-            let (name, formated_type) = Self::format_member(&arg);
-            self.buffer.push_line(&format!("{}: {},", name.snake_case(), formated_type));
-        }
-        self.buffer.decrease_indent();
-        self.buffer.push_line("},");
-        self.buffer.push_line(&format!("#[serde(rename = \"failure\")]"));
-        self.buffer.push_line(&format!("Failure({}),", failure_camel));
-        self.buffer.push_line(&format!("#[serde(rename = \"error\")]"));
-        self.buffer.push_line(&format!("Error({}),", error_camel));
-        self.buffer.decrease_indent();
-        self.buffer.push_line("}");
+        self.buffer.push_multiline(&format!(
+            "
+            pub enum {} {{
+                #[serde(rename = \"success\")]
+                Success({}),
+                #[serde(rename = \"failure\")]
+                Failure({}),
+                #[serde(rename = \"error\")]
+                Error({}),
+            }}", name, success_camel, failure_camel, error_camel));
         self.buffer.new_line();
     }
 
@@ -654,88 +740,50 @@ impl RustGenerator {
         &mut self,
         response: &spec::Response,
         name: &str,
+        yields: &Vec<spec::Yield>,
         reasons: &Vec<spec::Reason>,
     ) {
-        self.gen_success_constructor(name, &response);
+        let yeeld = spec::find_yield(&response.success, yields);
+        self.gen_success_constructor(name, &yeeld);
 
-        let reason = spec::find_reason(&response.failure_reason, reasons);
+        let reason = spec::find_reason(&response.failure, reasons);
         self.gen_reason_constructors("failure", name, &reason);
 
-        let reason = spec::find_reason(&response.error_reason, reasons);
+        let reason = spec::find_reason(&response.error, reasons);
         self.gen_reason_constructors("error", name, &reason);
     }
 
-    fn gen_reason_enum(&mut self, name: String, cases: &Vec<spec::Case>) {
-        self.push_derive_line();
-        self.buffer.push_line(&format!("pub enum {}Reason {{", name));
+    fn gen_success_constructor(&mut self, query_name: &str, yeeld: &spec::Yield) {
+        let yield_name = utils::Name::new(&yeeld.name);
+        let camel = yield_name.camel_case() + "Yield";
+
+        self.buffer.push_line(&format!("impl {} {{", query_name));
         self.buffer.increase_indent();
-        for case in cases.iter() {
-            let name = utils::Name::new(&case.name);
-            let (snake, camel) = (name.snake_case(), name.camel_case());
-            self.buffer.push_line(&format!("#[serde(rename = \"{}\")]", snake));
-            if case.args.len() > 0 {
-                self.buffer.push_line(&format!("{} {{", camel));
-                self.gen_args(&case.args);
-                self.buffer.push_line("},");
-            } else {
-                self.buffer.push_line(&format!("{},", camel));
-            }
+        self.buffer.push_indent();
+        self.buffer.push(&format!("pub fn success("));
+        if yeeld.args.len() != 0 {
+            self.buffer.new_line();
+            self.gen_args(&yeeld.args);
+            self.buffer.push_indent();
         }
-        self.buffer.decrease_indent();
-        self.buffer.push_line("}");
+        self.buffer.push(&format!(") -> (http::StatusCode, {}) {{", query_name));
         self.buffer.new_line();
-    }
-
-    fn gen_constructor(&mut self, members: &Vec<spec::Member>) {
-        self.buffer.push_line("pub fn new (");
-        self.buffer.increase_indent();
-        for member in members.iter() {
-            let (name, formated_type) = Self::format_member(&member);
-            self.buffer.push_line(&format!("{}: {},", name.snake_case(), formated_type));
-        }
-        self.buffer.decrease_indent();
-        self.buffer.push_line(") -> Self {");
-        self.buffer.increase_indent();
-        self.buffer.push_line("Self {");
-        self.buffer.increase_indent();
-        for member in members.iter() {
-            let (name, _) = Self::format_member(&member);
-            self.buffer.push_line(&format!("{},", name.snake_case()));
-        }
-        self.buffer.decrease_indent();
-        self.buffer.push_line("}");
-        self.buffer.decrease_indent();
-        self.buffer.push_line("}");
-    }
-
-    fn gen_success_constructor(&mut self, name: &str, response: &spec::Response) {
-        self.buffer.push_line(&format!("impl {} {{", name));
         self.buffer.increase_indent();
 
-        self.buffer.push_line(&format!("pub fn success ("));
-        self.buffer.increase_indent();
-        for arg in response.args.iter() {
-            let (name, formated_type) = Self::format_member(&arg);
-            self.buffer.push_line(&format!("{}: {},", name.snake_case(), formated_type));
-        }
-        self.buffer.decrease_indent();
-        self.buffer.push_line(&format!(") -> (http::StatusCode, {}) {{", name));
-        self.buffer.increase_indent();
-
-        let formatted_code = Self::format_code(&response.success_code);
-        self.buffer.push_line(&format!("({}, {}::Success {{", formatted_code, name));
-        self.buffer.increase_indent();
-        for arg in response.args.iter() {
-            let (name, _) = Self::format_member(&arg);
-            self.buffer.push_line(&format!("{},", name.snake_case()));
-        }
-        self.buffer.decrease_indent();
-        self.buffer.push_line("})");
+        self.buffer.push_indent();
+        let code = Self::format_code(&yeeld.code);
+        self.buffer.push(&format!(
+            "({}, {}::Success({} {{",
+            code,
+            query_name,
+            camel
+        ));
+        self.gen_args_call(&yeeld.args);
+        self.buffer.push("}))");
 
         self.buffer.decrease_indent();
-        self.buffer.push_line("}");
         self.buffer.new_line();
-
+        self.buffer.push_line("}");
         self.buffer.decrease_indent();
         self.buffer.push_line("}");
         self.buffer.new_line();
@@ -784,34 +832,6 @@ impl RustGenerator {
         self.buffer.new_line();
     }
 
-    fn gen_members(&mut self, members: &Vec<spec::Member>) {
-        self.buffer.increase_indent();
-        for member in members.iter() {
-            let (name, formated_type) = Self::format_member(&member);
-            self.buffer.push_line(&format!("pub {}: {},", name.snake_case(), formated_type));
-        }
-        self.buffer.decrease_indent();
-    }
-
-    fn gen_args(&mut self, args: &Vec<spec::Member>) {
-        self.buffer.increase_indent();
-        for arg in args.iter() {
-            let (name, formated_type) = Self::format_member(&arg);
-            self.buffer.push_line(&format!("{}: {},", name.snake_case(), formated_type));
-        }
-        self.buffer.decrease_indent();
-    }
-
-    fn gen_args_call(&mut self, args: &Vec<spec::Member>) {
-        for (i, arg) in args.iter().enumerate() {
-            let (name, _) = Self::format_member(&arg);
-            self.buffer.push(&name.snake_case());
-            if i != (args.len() - 1) {
-                self.buffer.push(", ");
-            }
-        }
-    }
-
     fn gen_method(&mut self, method: &spec::Method) {
         let prefix = utils::camel_case(&method.name);
         let method_name = prefix.clone() + "Method";
@@ -828,10 +848,6 @@ impl RustGenerator {
         self.buffer.decrease_indent();
         self.buffer.push_line("}");
         self.buffer.new_line();
-    }
-
-    fn push_derive_line(&mut self) {
-        self.buffer.push_line("#[derive(Clone, Debug, Serialize, Deserialize)]");
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -877,6 +893,63 @@ impl RustGenerator {
             self.buffer.decrease_indent();
             self.buffer.push_line("])");
         }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Common elements generation
+
+    fn push_derive_line(&mut self) {
+        self.buffer.push_line("#[derive(Clone, Debug, Serialize, Deserialize)]");
+    }
+
+    fn gen_args(&mut self, args: &Vec<spec::Member>) {
+        self.buffer.increase_indent();
+        for arg in args.iter() {
+            let (name, formated_type) = Self::format_member(&arg);
+            self.buffer.push_line(&format!("{}: {},", name.snake_case(), formated_type));
+        }
+        self.buffer.decrease_indent();
+    }
+
+    fn gen_pub_args(&mut self, args: &Vec<spec::Member>) {
+        self.buffer.increase_indent();
+        for arg in args.iter() {
+            let (name, formated_type) = Self::format_member(&arg);
+            self.buffer.push_line(&format!("pub {}: {},", name.snake_case(), formated_type));
+        }
+        self.buffer.decrease_indent();
+    }
+
+    fn gen_args_call(&mut self, args: &Vec<spec::Member>) {
+        for (i, arg) in args.iter().enumerate() {
+            let (name, _) = Self::format_member(&arg);
+            self.buffer.push(&name.snake_case());
+            if i != (args.len() - 1) {
+                self.buffer.push(", ");
+            }
+        }
+    }
+
+    fn gen_constructor(&mut self, members: &Vec<spec::Member>) {
+        self.buffer.push_line("pub fn new (");
+        self.buffer.increase_indent();
+        for member in members.iter() {
+            let (name, formated_type) = Self::format_member(&member);
+            self.buffer.push_line(&format!("{}: {},", name.snake_case(), formated_type));
+        }
+        self.buffer.decrease_indent();
+        self.buffer.push_line(") -> Self {");
+        self.buffer.increase_indent();
+        self.buffer.push_line("Self {");
+        self.buffer.increase_indent();
+        for member in members.iter() {
+            let (name, _) = Self::format_member(&member);
+            self.buffer.push_line(&format!("{},", name.snake_case()));
+        }
+        self.buffer.decrease_indent();
+        self.buffer.push_line("}");
+        self.buffer.decrease_indent();
+        self.buffer.push_line("}");
     }
 
     // ---------------------------------------------------------------------------------------------

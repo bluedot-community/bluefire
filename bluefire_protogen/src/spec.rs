@@ -252,6 +252,23 @@ pub struct TypeDef {
 }
 
 // -------------------------------------------------------------------------------------------------
+// Yields
+
+/// Represents a successful result.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Yield {
+    /// Name of the yield.
+    pub name: String,
+
+    /// HTTP code used in this response.
+    pub code: HttpResponse,
+
+    /// Values sent in response.
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub args: Vec<Member>,
+}
+
+// -------------------------------------------------------------------------------------------------
 // Reasons
 
 /// Represents a reason of failure or error.
@@ -271,7 +288,7 @@ pub struct Case {
     /// Name of the case. Used to generate the name of the constructor.
     pub name: String,
 
-    /// HTTP code used in this case.
+    /// HTTP code used in this response.
     pub code: HttpResponse,
 
     /// Values sent in response.
@@ -330,17 +347,14 @@ pub struct Request {
 /// Represents a response to an API call.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Response {
-    /// HTTP code used in case of success.
-    pub success_code: HttpResponse,
+    /// A name of yield type used in case of success.
+    pub success: String,
 
     /// A name of reason type used in case of failure.
-    pub failure_reason: String,
+    pub failure: String,
 
     /// A name of reason type used in case of error.
-    pub error_reason: String,
-
-    /// Returned values (serialized to JSON).
-    pub args: Vec<Member>,
+    pub error: String,
 }
 
 /// Represents an API call method.
@@ -378,6 +392,9 @@ pub struct Api {
 
     /// A list of tree-like structures representing API routes.
     pub routes: Vec<Route>,
+
+    /// A list of possible success results.
+    pub yields: Vec<Yield>,
 
     /// A list of possible failure reasons.
     pub reasons: Vec<Reason>,
@@ -451,20 +468,31 @@ impl Api {
 // Helper functions
 
 /// Searches for a `Reason` with given name.
-pub fn find_reason(reason_name: &str, reasons: &Vec<Reason>) -> Reason {
+pub fn find_reason(name: &str, reasons: &Vec<Reason>) -> Reason {
     for reason in reasons.iter() {
-        if reason_name == reason.name {
+        if name == reason.name {
             return reason.clone();
         }
     }
 
-    panic!("No reason '{}' found", reason_name);
+    panic!("No reason '{}' found", name);
+}
+
+/// Searches for a `Yield` with given name.
+pub fn find_yield(name: &str, yields: &Vec<Yield>) -> Yield {
+    for yeeld in yields.iter() {
+        if name == yeeld.name {
+            return yeeld.clone();
+        }
+    }
+
+    panic!("No yield '{}' found", name);
 }
 
 /// Searches for a `TypeDef` with given name.
-pub fn find_type(type_name: &str, types: &Vec<TypeDef>) -> Option<TypeDef> {
+pub fn find_type(name: &str, types: &Vec<TypeDef>) -> Option<TypeDef> {
     for tipe in types.iter() {
-        if type_name == tipe.name {
+        if name == tipe.name {
             return Some(tipe.clone());
         }
     }
