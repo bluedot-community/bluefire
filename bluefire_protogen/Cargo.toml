@@ -9,11 +9,17 @@ publish = false
 name = "protogen"
 path = "bin/protogen.rs"
 
+[features]
+fmt = ["rustfmt-nightly"]
+
 [dependencies]
-clap = "2.32"
-http = "0.1"
-serde = "1.0"
-serde_derive = "1.0"
-serde_yaml = "0.8"
-bluefire_twine = "0.1.0"
+askama = { version = "0.8" }
+clap = { version = "2.32" }
+http = { version = "0.1" }
+serde = { version = "1.0" }
+serde_derive = { version = "1.0" }
+serde_yaml = { version = "0.8" }
+rustfmt-nightly = { version = "1.3.2", optional = true }
+bluefire_twine = { version = "0.1.0" }
+
 

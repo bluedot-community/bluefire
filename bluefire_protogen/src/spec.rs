@@ -172,7 +172,7 @@ pub enum Member {
     /// Simple (predefined) member.
     Simple {
         /// Member name.
-        name: String,
+        name: utils::Name,
 
         /// Members type.
         #[serde(rename = "type")]
@@ -182,11 +182,11 @@ pub enum Member {
     /// A members inside of a predefined container.
     Contained {
         /// Members name.
-        name: String,
+        name: utils::Name,
 
         /// Members type.
         #[serde(rename = "type")]
-        tipe: String,
+        tipe: utils::Name,
 
         /// Members container.
         container: ContainerType,
@@ -195,11 +195,11 @@ pub enum Member {
     /// A member type defined in API specification.
     Defined {
         /// Members name.
-        name: String,
+        name: utils::Name,
 
         /// Members type (this type must be defined in the API specification).
         #[serde(rename = "type")]
-        tipe: String,
+        tipe: utils::Name,
     },
 }
 
@@ -237,7 +237,7 @@ pub enum TypeRepr {
     #[serde(rename = "enum")]
     Enum {
         /// A list of values.
-        values: Vec<String>,
+        values: Vec<utils::Name>,
     },
 }
 
@@ -245,7 +245,7 @@ pub enum TypeRepr {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TypeDef {
     /// Name of the new type.
-    pub name: String,
+    pub name: utils::Name,
 
     /// The way the type should be represented.
     pub container: TypeRepr,
@@ -258,7 +258,7 @@ pub struct TypeDef {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Yield {
     /// Name of the yield.
-    pub name: String,
+    pub name: utils::Name,
 
     /// HTTP code used in this response.
     pub code: HttpResponse,
@@ -276,7 +276,7 @@ pub struct Yield {
 pub struct Reason {
     /// Name of the failure. Used to generate the representation name and to specify the reason in
     /// the `Method`.
-    pub name: String,
+    pub name: utils::Name,
 
     /// List of possible cases.
     pub cases: Vec<Case>,
@@ -286,7 +286,7 @@ pub struct Reason {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Case {
     /// Name of the case. Used to generate the name of the constructor.
-    pub name: String,
+    pub name: utils::Name,
 
     /// HTTP code used in this response.
     pub code: HttpResponse,
@@ -304,11 +304,11 @@ pub struct Case {
 pub enum Segment {
     /// Only strings exactly equal this one will match with this segment.
     #[serde(rename = "exact")]
-    Exact(String),
+    Exact(utils::Name),
 
     /// Any string will match with this segment. (Can be used to parametrize the path.)
     #[serde(rename = "string")]
-    Str(String),
+    Str(utils::Name),
 }
 
 /// Represents a route (in a tree-like manner).
@@ -316,8 +316,8 @@ pub enum Segment {
 pub struct Route {
     /// Name of the path represented by this `Route` node.
     /// Used to generate a viewer struct name.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub name: Option<utils::Name>,
 
     /// The type of segment.
     #[serde(flatten)]
@@ -326,6 +326,15 @@ pub struct Route {
     /// A list of sub-routes.
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub routes: Vec<Route>,
+}
+
+/// A helper structure for representing routes as vectors of segments.
+pub struct Path {
+    /// The name of the path.
+    pub name: utils::Name,
+
+    /// A list of segments constituting the path.
+    pub segments: Vec<Segment>,
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -338,7 +347,7 @@ pub struct Request {
     pub method: HttpMethod,
 
     /// Path part of the URL.
-    pub path: String,
+    pub path: utils::Name,
 
     /// Arguments of the call (serialized either to JSON or query part of the URL).
     pub args: Vec<Member>,
@@ -348,20 +357,20 @@ pub struct Request {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Response {
     /// A name of yield type used in case of success.
-    pub success: String,
+    pub success: utils::Name,
 
     /// A name of reason type used in case of failure.
-    pub failure: String,
+    pub failure: utils::Name,
 
     /// A name of reason type used in case of error.
-    pub error: String,
+    pub error: utils::Name,
 }
 
 /// Represents an API call method.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Method {
     /// Name of the method. Used to generate the request and response representation names.
-    pub name: String,
+    pub name: utils::Name,
 
     /// The definition of a request.
     pub request: Request,
@@ -371,14 +380,14 @@ pub struct Method {
 }
 
 // -------------------------------------------------------------------------------------------------
-// Protocol
+// Specifications
 
 /// Represents a top-level (index) route.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Routes {
     /// Name of the path represented by this `Routes` node.
     /// Used to generate a viewer struct name.
-    pub name: Option<String>,
+    pub name: Option<utils::Name>,
 
     /// A list of sub-routes.
     pub routes: Vec<Route>,
@@ -441,15 +450,6 @@ impl Condition {
     }
 }
 
-/// A helper method for representing routes as vectors of segments.
-pub struct Path {
-    /// The name of the path.
-    pub name: String,
-
-    /// A list of segments constituting the path.
-    pub segments: Vec<Segment>,
-}
-
 impl Routes {
     /// Constructs `Routes` structure from API file content.
     pub fn from_str(spec_str: &str) -> Result<Self, serde_yaml::Error> {
@@ -467,36 +467,34 @@ impl Api {
 // -------------------------------------------------------------------------------------------------
 // Helper functions
 
-/// Searches for a `Reason` with given name.
-pub fn find_reason(name: &str, reasons: &Vec<Reason>) -> Reason {
-    for reason in reasons.iter() {
-        if name == reason.name {
-            return reason.clone();
+/// Searches for a `TypeDef` with given name.
+pub fn find_type(name: &utils::Name, types: &Vec<TypeDef>) -> TypeDef {
+    for tipe in types.iter() {
+        if *name == tipe.name {
+            return tipe.clone();
         }
     }
-
-    panic!("No reason '{}' found", name);
+    panic!("No type '{}' found", name.kebab_case());
 }
 
 /// Searches for a `Yield` with given name.
-pub fn find_yield(name: &str, yields: &Vec<Yield>) -> Yield {
+pub fn find_yield(name: &utils::Name, yields: &Vec<Yield>) -> Yield {
     for yeeld in yields.iter() {
-        if name == yeeld.name {
+        if *name == yeeld.name {
             return yeeld.clone();
         }
     }
-
-    panic!("No yield '{}' found", name);
+    panic!("No yield '{}' found", name.kebab_case());
 }
 
-/// Searches for a `TypeDef` with given name.
-pub fn find_type(name: &str, types: &Vec<TypeDef>) -> Option<TypeDef> {
-    for tipe in types.iter() {
-        if name == tipe.name {
-            return Some(tipe.clone());
+/// Searches for a `Reason` with given name.
+pub fn find_reason(name: &utils::Name, reasons: &Vec<Reason>) -> Reason {
+    for reason in reasons.iter() {
+        if *name == reason.name {
+            return reason.clone();
         }
     }
-    None
+    panic!("No reason '{}' found", name.kebab_case());
 }
 
 /// Transforms routes representation from tree-like structure to a vector of vectors of path
@@ -524,17 +522,19 @@ pub fn routes_to_paths(routes: &Vec<Route>) -> Vec<Path> {
 
 #[cfg(test)]
 mod tests {
-    use super::{ContainerType, Member, Route, Segment, SimpleType, TypeDef, TypeRepr};
     use serde_yaml;
+
+    use crate::spec::{ContainerType, Member, Route, Segment, SimpleType, TypeDef, TypeRepr};
+    use crate::utils::Name;
 
     #[test]
     fn test_typedef_serialization() {
-        let member1 = Member::Defined { name: "abcd".to_owned(), tipe: "custom".to_owned() };
-        let member2 = Member::Defined { name: "edfg".to_owned(), tipe: "custom".to_owned() };
+        let member1 = Member::Defined { name: Name::new("abcd"), tipe: Name::new("custom") };
+        let member2 = Member::Defined { name: Name::new("edfg"), tipe: Name::new("custom") };
         let members = vec![member1, member2];
         assert_eq!(
             serde_yaml::to_string(&TypeDef {
-                name: "name".to_string(),
+                name: Name::new("name"),
                 container: TypeRepr::Struct { members: members.clone() }
             })
             .unwrap(),
@@ -547,21 +547,21 @@ mod tests {
     fn test_route_serialization() {
         assert_eq!(
             serde_yaml::to_string(&Route {
-                name: Some("Name1".to_owned()),
-                segment: Segment::Exact("segment_name_1".to_owned()),
+                name: Some(Name::new("name-1")),
+                segment: Segment::Exact(Name::new("segment-name-1")),
                 routes: Vec::new(),
             })
             .unwrap(),
-            "---\nname: Name1\nexact: segment_name_1"
+            "---\nname: name-1\nexact: segment-name-1"
         );
         assert_eq!(
             serde_yaml::to_string(&Route {
-                name: Some("Name2".to_owned()),
-                segment: Segment::Str("segment_name_2".to_owned()),
+                name: Some(Name::new("name-2")),
+                segment: Segment::Str(Name::new("segment-name-2")),
                 routes: Vec::new(),
             })
             .unwrap(),
-            "---\nname: Name2\nstring: segment_name_2"
+            "---\nname: name-2\nstring: segment-name-2"
         );
     }
 
@@ -569,8 +569,8 @@ mod tests {
     fn test_member_serialization() {
         assert_eq!(
             serde_yaml::to_string(&Member::Contained {
-                name: "abc".to_owned(),
-                tipe: "custom".to_owned(),
+                name: Name::new("abc"),
+                tipe: Name::new("custom"),
                 container: ContainerType::Vector,
             })
             .unwrap(),
@@ -583,22 +583,22 @@ mod tests {
         let d1 = "---\nname: abc\ntype: u8".to_owned();
         let d2 = "---\nname: abc\ntype: string".to_owned();
         let d3 = "---\nname: abc\ntype: custom".to_owned();
-        let d4 = "---\nname: abc\ntype: string 2".to_owned();
+        let d4 = "---\nname: abc\ntype: string-2".to_owned();
         let d5 = "---\nname: abc\ntype: custom\ncontainer: vector".to_owned();
         let s1 = serde_yaml::from_str::<Member>(&d1).unwrap();
         let s2 = serde_yaml::from_str::<Member>(&d2).unwrap();
         let s3 = serde_yaml::from_str::<Member>(&d3).unwrap();
         let s4 = serde_yaml::from_str::<Member>(&d4).unwrap();
         let s5 = serde_yaml::from_str::<Member>(&d5).unwrap();
-        assert_eq!(s1, Member::Simple { name: "abc".to_owned(), tipe: SimpleType::U8 });
-        assert_eq!(s2, Member::Simple { name: "abc".to_owned(), tipe: SimpleType::Str });
-        assert_eq!(s3, Member::Defined { name: "abc".to_owned(), tipe: "custom".to_owned() });
-        assert_eq!(s4, Member::Defined { name: "abc".to_owned(), tipe: "string 2".to_owned() });
+        assert_eq!(s1, Member::Simple { name: Name::new("abc"), tipe: SimpleType::U8 });
+        assert_eq!(s2, Member::Simple { name: Name::new("abc"), tipe: SimpleType::Str });
+        assert_eq!(s3, Member::Defined { name: Name::new("abc"), tipe: Name::new("custom") });
+        assert_eq!(s4, Member::Defined { name: Name::new("abc"), tipe: Name::new("string-2") });
         assert_eq!(
             s5,
             Member::Contained {
-                name: "abc".to_owned(),
-                tipe: "custom".to_owned(),
+                name: Name::new("abc"),
+                tipe: Name::new("custom"),
                 container: ContainerType::Vector,
             }
         );

@@ -10,25 +10,18 @@
 //! format string will be split in places of hyphens and resulted vector of strings will be used to
 //! generate snake- or came-cased identifier names.
 
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
 /// Capitalize the given string. The first letter will be capitalized and all the others lowered.
 pub fn capitalize(word: &str) -> String {
-    let mut result = String::new();
+    let mut result = String::with_capacity(word.len());
     result += &word[..1].to_uppercase();
     result += &word[1..].to_lowercase();
     result
 }
 
-/// Returns a snake-cased version of the passed string.
-pub fn snake_case(name: &str) -> String {
-    Name::new(name).snake_case()
-}
-
-/// Returns a camel-cased version of the passed string.
-pub fn camel_case(name: &str) -> String {
-    Name::new(name).camel_case()
-}
-
 /// Represents an identifier name that can be formatted as snake- or camel-case.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Name {
     parts: Vec<String>,
 }
@@ -49,21 +42,58 @@ impl Name {
 
     /// Returns a snake-case representation of the identifier name.
     pub fn snake_case(&self) -> String {
-        let mut result = String::new();
+        let mut buffer = Vec::with_capacity(self.parts.len());
         for part in self.parts.iter() {
-            result += &part.to_lowercase();
-            result += "_";
+            buffer.push(part.to_lowercase());
         }
-        result.pop();
-        result
+        buffer.join("_")
     }
 
     /// Returns a camel-case representation of the identifier name.
     pub fn camel_case(&self) -> String {
-        let mut result = String::new();
+        let mut buffer = Vec::with_capacity(self.parts.len());
         for part in self.parts.iter() {
-            result += &capitalize(&part);
+            buffer.push(capitalize(&part));
         }
-        result
+        buffer.join("")
+    }
+
+    /// Returns a kebab-case representation of the identifier name.
+    pub fn kebab_case(&self) -> String {
+        let mut buffer = Vec::with_capacity(self.parts.len());
+        for part in self.parts.iter() {
+            buffer.push(part.to_lowercase());
+        }
+        buffer.join("-")
+    }
+}
+
+impl Serialize for Name {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.kebab_case())
+    }
+}
+
+impl<'de> Deserialize<'de> for Name {
+    fn deserialize<D>(deserializer: D) -> Result<Name, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(Name::new(&s))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn name() {
+        let name = super::Name::new("one-two-three");
+        assert_eq!(name.camel_case(), "OneTwoThree");
+        assert_eq!(name.snake_case(), "one_two_three");
+        assert_eq!(name.kebab_case(), "one-two-three");
     }
 }

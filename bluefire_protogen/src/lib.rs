@@ -14,7 +14,6 @@
 
 #![warn(missing_docs)]
 
-pub mod buffer;
 pub mod rust_generator;
 pub mod spec;
 pub mod utils;

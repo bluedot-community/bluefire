@@ -121,4 +121,3 @@ impl From<bson::oid::ObjectId> for Id {
         Id::from_str(&oid.to_hex()).expect("Cast from bson ObjectId to bluefire Id")
     }
 }
-
