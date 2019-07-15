@@ -84,6 +84,8 @@
                                     __validate_{{ found.name.snake_case() }}(&self.{{ member.name().snake_case() }})
                                 }
                             {% endif %}
+                        {% when spec::TypeRepr::External %}
+                            {# nothing to generate #}
                         {% when spec::TypeRepr::Struct with {members} %}
                             {# nothing to generate #}
                         {% when spec::TypeRepr::Union with {members} %}

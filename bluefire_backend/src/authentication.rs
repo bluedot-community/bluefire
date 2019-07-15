@@ -685,7 +685,7 @@ impl AuthenticationQueryParams {
     }
 }
 
-/// The trait implmented by structs providing data required to authenticate a user.
+/// The trait implemented by structs providing data required to authenticate a user.
 pub trait AuthenticationDataProvider:
     DataProvider<QueryParams = AuthenticationQueryParams> + Clone
 {
@@ -846,6 +846,15 @@ where
         }
     } else {
         Ok(LogoutOutcome::NotLoggedIn)
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+
+impl BlueFire {
+    /// Returns `UserInfo` extension.
+    pub fn get_user_info(&self) -> Option<&UserInfo> {
+        self.extension::<UserInfo>()
     }
 }
 

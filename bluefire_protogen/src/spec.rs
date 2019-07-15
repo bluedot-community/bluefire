@@ -219,6 +219,10 @@ pub enum TypeRepr {
         validation: Option<Validation>,
     },
 
+    /// An external type.
+    #[serde(rename = "external")]
+    External,
+
     /// A structure with members.
     #[serde(rename = "struct")]
     Struct {

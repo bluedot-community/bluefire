@@ -102,6 +102,8 @@ use serde_derive::{Serialize, Deserialize};
                     }
                 {% when None %}
             {% endmatch %}
+        {% when spec::TypeRepr::External %}
+            {# nothing to generate #}
         {% when spec::TypeRepr::Struct with {members} %}
             #[derive(Clone, Debug, Serialize, Deserialize)]
             pub struct {{ tipe.name.camel_case() }} {
