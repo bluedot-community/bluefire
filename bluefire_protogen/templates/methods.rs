@@ -100,6 +100,7 @@
     {# RESPONSE #}
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(tag = "result", content = "content")]
     pub enum {{ response_name }} {
         #[serde(rename = "success")]
         Success({{ method.response.success.camel_case() }}Yield),
