@@ -77,9 +77,33 @@ impl Id {
 
     /// Casts the `Id` into `bson::oid::ObjectId`.
     #[cfg(feature = "bson_conversion")]
-    pub fn into_bson_oid(self) -> bson::oid::ObjectId {
+    pub fn into_bson_oid(&self) -> bson::oid::ObjectId {
         bson::oid::ObjectId::with_string(&self.to_hex())
             .expect("Cast from bluefire Id to bson ObjectId")
+    }
+
+    /// Casts the `bson::oid::ObjectId` into `Id`.
+    #[cfg(feature = "bson_conversion")]
+    pub fn from_bson_oid(oid: &bson::oid::ObjectId) -> Self {
+        Id::from_str(&oid.to_hex()).expect("Cast from bson ObjectId to bluefire Id")
+    }
+
+    /// Casts the `Id` into `bson::Bson`.
+    #[cfg(feature = "bson_conversion")]
+    pub fn into_bson(&self) -> bson::Bson {
+        bson::Bson::ObjectId(self.into_bson_oid())
+    }
+
+    /// Casts the `bson::Bson` into `Id`.
+    #[cfg(feature = "bson_conversion")]
+    pub fn from_bson(bson: &bson::Bson) -> Self {
+        match bson {
+            bson::Bson::ObjectId(oid) => Id::from_bson_oid(oid),
+            bson::Bson::String(string) => {
+                Id::from_str(string).expect("Cast from bson to bluefire Id")
+            }
+            _ => panic!("Cast from wrong variant of bson to bluefire Id"),
+        }
     }
 }
 
@@ -109,6 +133,20 @@ impl std::cmp::PartialEq<str> for Id {
 }
 
 #[cfg(feature = "bson_conversion")]
+impl From<&Id> for bson::oid::ObjectId {
+    fn from(id: &Id) -> bson::oid::ObjectId {
+        id.into_bson_oid()
+    }
+}
+
+#[cfg(feature = "bson_conversion")]
+impl From<&bson::oid::ObjectId> for Id {
+    fn from(oid: &bson::oid::ObjectId) -> Id {
+        Id::from_bson_oid(oid)
+    }
+}
+
+#[cfg(feature = "bson_conversion")]
 impl From<Id> for bson::oid::ObjectId {
     fn from(id: Id) -> bson::oid::ObjectId {
         id.into_bson_oid()
@@ -118,6 +156,6 @@ impl From<Id> for bson::oid::ObjectId {
 #[cfg(feature = "bson_conversion")]
 impl From<bson::oid::ObjectId> for Id {
     fn from(oid: bson::oid::ObjectId) -> Id {
-        Id::from_str(&oid.to_hex()).expect("Cast from bson ObjectId to bluefire Id")
+        Id::from_bson_oid(&oid)
     }
 }
