@@ -1,5 +1,3 @@
-{# REASONS #}
-
 {% for reason in api.reasons %}
     {% let name = reason.name.camel_case() + "Reason" %}
 

@@ -1,7 +1,3 @@
-use serde_derive::{Serialize, Deserialize};
-
-{# TYPES #}
-
 {% for tipe in api.types %}
     {% match tipe.container %}
         {% when spec::TypeRepr::Simple with {simple_type, validation} %}

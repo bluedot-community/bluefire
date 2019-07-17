@@ -1,5 +1,3 @@
-{# YIELDS #}
-
 {% for yeeld in api.yields %}
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct {{ yeeld.name.camel_case() }}Yield {

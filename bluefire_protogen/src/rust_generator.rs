@@ -76,6 +76,17 @@ impl spec::Member {
 
 // -------------------------------------------------------------------------------------------------
 
+/// Template for type imports.
+#[derive(Template)]
+#[template(path = "imports.rs", escape = "none")]
+struct RustImportsTemplate;
+
+impl RustImportsTemplate {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
 /// Template for generating types.
 #[derive(Template)]
 #[template(path = "types.rs", escape = "none")]
@@ -217,6 +228,7 @@ impl RustGenerator {
     /// Generate API.
     pub fn generate_api(self, api: &spec::Api) -> String {
         let paths = spec::routes_to_paths(&api.routes);
+        let imports_template = RustImportsTemplate::new();
         let types_template = RustTypesTemplate::new(&api);
         let paths_template = RustPathsTemplate::new(&paths);
         let yields_template = RustYieldsTemplate::new(&api);
@@ -224,6 +236,7 @@ impl RustGenerator {
         let methods_template = RustMethodsTemplate::new(&api, GeneratorCallback::new());
 
         let buffer = [
+            imports_template.render().expect("Render imports template"),
             types_template.render().expect("Render types template"),
             paths_template.render().expect("Render paths template"),
             yields_template.render().expect("Render yields template"),
@@ -237,7 +250,15 @@ impl RustGenerator {
     /// Generate path definitions.
     pub fn generate_paths(self, routes: &spec::Routes) -> String {
         let paths = spec::routes_to_paths(&routes.routes);
-        RustPathsTemplate::new(&paths).render().expect("Render paths template")
+        let imports_template = RustImportsTemplate::new();
+        let paths_template = RustPathsTemplate::new(&paths);
+
+        let buffer = [
+            imports_template.render().expect("Render imports template"),
+            paths_template.render().expect("Render paths template"),
+        ];
+
+        buffer.concat()
     }
 
     /// Generate routes (`bluefire_backend::Route`).
@@ -249,9 +270,32 @@ impl RustGenerator {
 
     /// Generate API from given input file and save to the given output file.
     pub fn generate_api_file(self, input: &str, output: &str) {
-        use std::io::Write;
+        let content = Self::read_manifest_path(input);
+        let api = spec::Api::from_str(&content).expect(&format!("Parse file: '{:?}'", input));
+        let result = self.generate_api(&api);
+        Self::write_output_file(output, &result);
+    }
 
-        let output_dir = std::env::var("OUT_DIR").expect("Read OUT_DIR variable");
+    /// Generate paths from given input file and save to the given output file.
+    pub fn generate_paths_file(self, input: &str, output: &str) {
+        let content = Self::read_manifest_path(input);
+        let paths = spec::Routes::from_str(&content).expect(&format!("Parse file: '{:?}'", input));
+        let result = self.generate_paths(&paths);
+        Self::write_output_file(output, &result);
+    }
+
+    /// Generate routes from given input file and save to the given output file.
+    pub fn generate_routes_file(self, input: &str, output: &str) {
+        let content = Self::read_manifest_path(input);
+        let routes = spec::Routes::from_str(&content).expect(&format!("Parse file: '{:?}'", input));
+        let result = self.generate_routes(&routes);
+        Self::write_output_file(output, &result);
+    }
+}
+
+impl RustGenerator {
+    /// Reads a file from the cargo manifest path.
+    pub fn read_manifest_path(input: &str) -> String {
         let input_dir =
             std::env::var("CARGO_MANIFEST_DIR").expect("Cargo manifest directory not provided");
 
@@ -259,20 +303,22 @@ impl RustGenerator {
         input_path.push(&input_dir);
         input_path.push(input);
 
+        std::fs::read_to_string(input_path.clone()).expect(&format!("Read file: {:?}", input_path))
+    }
+
+    /// Writes to a file in output directory.
+    pub fn write_output_file(output: &str, content: &str) {
+        use std::io::Write;
+
+        let output_dir = std::env::var("OUT_DIR").expect("Read OUT_DIR variable");
+
         let mut output_path = std::path::PathBuf::new();
         output_path.push(&output_dir);
         output_path.push(output);
 
-        let api_str = std::fs::read_to_string(input_path.clone())
-            .expect(&format!("Read file: {:?}", input_path));
-        let api =
-            spec::Api::from_str(&api_str).expect(&format!("Parse {:?} spec file", input_path));
-
-        let result = self.generate_api(&api);
-
         let mut file =
             std::fs::File::create(&output_path).expect(&format!("Create file: {:?}", &output_path));
-        file.write_all(result.as_bytes()).expect(&format!("Write to file: {:?}", &output_path));
+        file.write_all(content.as_bytes()).expect(&format!("Write to file: {:?}", &output_path));
 
         #[cfg(feature = "fmt")]
         {

@@ -1,10 +1,8 @@
-{# ROUTES #}
-
 bluefire_backend::router::Route::index()
 
 {%- match routes.name -%}
     {%- when Some with (name) -%}
-        .with_view(Box::new({{ name.camel_case() }}View))
+        .with_view(Box::new({{ name.snake_case() }}))
     {%- when None -%}
 {%- endmatch -%}
 

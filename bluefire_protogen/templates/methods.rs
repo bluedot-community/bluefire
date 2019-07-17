@@ -1,5 +1,3 @@
-{# METHODS #}
-
 {% for method in api.methods %}
     {% let method_name = method.name.camel_case() + "Method" %}
     {% let request_name = method.name.camel_case() + "Request" %}

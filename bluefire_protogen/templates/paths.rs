@@ -1,5 +1,3 @@
-{# PATHS #}
-
 {% for path in paths %}
     {% let name = path.name.camel_case() + "PathParams" %}
 

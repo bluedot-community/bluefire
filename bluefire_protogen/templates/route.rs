@@ -1,5 +1,3 @@
-{# ROUTE #}
-
 bluefire_backend::router::Route::
 {%- match route.segment -%}
     {%- when spec::Segment::Exact with (name) -%}
@@ -10,7 +8,7 @@ bluefire_backend::router::Route::
 
 {%- match route.name -%}
     {%- when Some with (name) -%}
-        .with_view(Box::new({{ name.camel_case() }}View))
+        .with_view(Box::new({{ name.snake_case() }}))
     {%- when None -%}
 {%- endmatch -%}
 
