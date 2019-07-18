@@ -50,7 +50,7 @@
     impl From<{{ name }}> for http::Response<String> {
         fn from(reason: {{ name }}) -> http::Response<String> {
             let mut value = serde_json::Map::new();
-            value.insert("result".to_string(), serde_json::Value::String("{{ reason.name.snake_case() }}".to_string()));
+            value.insert("result".to_string(), serde_json::Value::String("{{ reason.variant.as_str() }}".to_string()));
             value.insert("content".to_string(), serde_json::to_value(&reason).expect("Serialize response to JSON Value"));
 
             http::response::Builder::new()

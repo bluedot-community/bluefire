@@ -275,12 +275,27 @@ pub struct Yield {
 // -------------------------------------------------------------------------------------------------
 // Reasons
 
+/// Variant of the reason.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum ReasonVariant {
+    /// Reason for an error.
+    #[serde(rename = "error")]
+    Error,
+
+    /// Reason for a failure.
+    #[serde(rename = "failure")]
+    Failure,
+}
+
 /// Represents a reason of failure or error.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Reason {
     /// Name of the failure. Used to generate the representation name and to specify the reason in
     /// the `Method`.
     pub name: utils::Name,
+
+    /// Variant of the reason.
+    pub variant: ReasonVariant,
 
     /// List of possible cases.
     pub cases: Vec<Case>,
@@ -450,6 +465,16 @@ impl Condition {
             Condition::LenEq(..) => utils::Name::from_parts(vec!["wrong", "length"]),
             Condition::LenLe(..) => utils::Name::from_parts(vec!["too", "long"]),
             Condition::LenGe(..) => utils::Name::from_parts(vec!["too", "short"]),
+        }
+    }
+}
+
+impl ReasonVariant {
+    /// Returns a string representation of the enum.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ReasonVariant::Error => "error",
+            ReasonVariant::Failure => "failure",
         }
     }
 }

@@ -271,7 +271,10 @@ impl RustGenerator {
     /// Generate API from given input file and save to the given output file.
     pub fn generate_api_file(self, input: &str, output: &str) {
         let content = Self::read_manifest_path(input);
-        let api = spec::Api::from_str(&content).expect(&format!("Parse file: '{:?}'", input));
+        let api = match spec::Api::from_str(&content) {
+            Ok(api) => api,
+            Err(err) => panic!("Parse file ({}): {}", input, err),
+        };
         let result = self.generate_api(&api);
         Self::write_output_file(output, &result);
     }
@@ -279,7 +282,10 @@ impl RustGenerator {
     /// Generate paths from given input file and save to the given output file.
     pub fn generate_paths_file(self, input: &str, output: &str) {
         let content = Self::read_manifest_path(input);
-        let paths = spec::Routes::from_str(&content).expect(&format!("Parse file: '{:?}'", input));
+        let paths = match spec::Routes::from_str(&content) {
+            Ok(api) => api,
+            Err(err) => panic!("Parse file ({}): {}", input, err),
+        };
         let result = self.generate_paths(&paths);
         Self::write_output_file(output, &result);
     }
@@ -287,7 +293,10 @@ impl RustGenerator {
     /// Generate routes from given input file and save to the given output file.
     pub fn generate_routes_file(self, input: &str, output: &str) {
         let content = Self::read_manifest_path(input);
-        let routes = spec::Routes::from_str(&content).expect(&format!("Parse file: '{:?}'", input));
+        let routes = match spec::Routes::from_str(&content) {
+            Ok(api) => api,
+            Err(err) => panic!("Parse file ({}): {}", input, err),
+        };
         let result = self.generate_routes(&routes);
         Self::write_output_file(output, &result);
     }
