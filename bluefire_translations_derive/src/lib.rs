@@ -11,7 +11,6 @@ extern crate proc_macro2;
 extern crate syn;
 
 use std::collections::HashMap;
-use std::io::Read;
 use std::path::PathBuf;
 
 use serde_derive::{Deserialize, Serialize};
@@ -81,16 +80,35 @@ impl TranslationFile {
 
 fn read_translations(config: &Config) -> HashMap<String, HashMap<String, String>> {
     let mut result = HashMap::new();
-    for entry in std::fs::read_dir(&config.translations_path).expect("Translation directory") {
-        let entry = entry.expect("Failed to read translation directory");
-        let path = entry.path();
+    match std::fs::read_dir(&config.translations_path) {
+        Ok(directory) => {
+            let mut processed_files = 0;
+            for entry in directory {
+                let path = match entry {
+                    Ok(entry) => entry.path(),
+                    Err(err) => panic!("Failed to read translation directory: {}", err),
+                };
 
-        if path.is_file() && path.extension().filter(|e| *e == "yaml").is_some() {
-            let mut f = std::fs::File::open(&path).expect(&format!("Open file '{:?}'", path));
-            let mut s = String::new();
-            f.read_to_string(&mut s).expect(&format!("Read file '{:?}'", path));
-            let trans: TranslationFile = serde_yaml::from_str(&s).expect("Parse translation file");
-            result.insert(trans.lang_code.clone(), trans.into_map());
+                if path.is_file() && path.extension().filter(|e| *e == "yaml").is_some() {
+                    let string = match std::fs::read_to_string(&path) {
+                        Ok(string) => string,
+                        Err(err) => panic!("Failed to read file ({:?}): {}", path, err),
+                    };
+                    let trans: TranslationFile = match serde_yaml::from_str(&string) {
+                        Ok(trans) => trans,
+                        Err(err) => panic!("Parse translation file: {}", err),
+                    };
+                    result.insert(trans.lang_code.clone(), trans.into_map());
+                    processed_files += 1;
+                }
+            }
+
+            if processed_files == 0 {
+                panic!("No translations were provided in {:?}", config.translations_path);
+            }
+        }
+        Err(err) => {
+            panic!("Failed to read directory ({:?}): {}", config.translations_path, err);
         }
     }
     result
