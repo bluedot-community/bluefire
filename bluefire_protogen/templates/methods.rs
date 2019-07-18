@@ -102,8 +102,12 @@
     pub enum {{ response_name }} {
         #[serde(rename = "success")]
         Success({{ method.response.success.camel_case() }}Yield),
-        #[serde(rename = "failure")]
-        Failure({{ method.response.failure.camel_case() }}Reason),
+        {% match method.response.failure %}
+            {% when Some with (failure) %}
+                #[serde(rename = "failure")]
+                Failure({{ failure.camel_case() }}Reason),
+            {% when None %}
+        {% endmatch %}
         #[serde(rename = "error")]
         Error({{ method.response.error.camel_case() }}Reason),
     }
@@ -123,21 +127,25 @@
             })
         )}
 
-        {% let failure_reason = generator.find_reason(method.response.failure.clone(), api.reasons) %}
-        {% for case in failure_reason.cases %}
-            pub fn failure_{{ case.name.snake_case() }}(
-                {% for arg in case.args %}
-                    {{ arg.name().snake_case() }}: {{ arg.rust_type() }},
+        {% match method.response.failure %}
+            {% when Some with (failure) %}
+                {% let failure_reason = generator.find_reason(failure.clone(), api.reasons) %}
+                {% for case in failure_reason.cases %}
+                    pub fn failure_{{ case.name.snake_case() }}(
+                        {% for arg in case.args %}
+                            {{ arg.name().snake_case() }}: {{ arg.rust_type() }},
+                        {% endfor %}
+                    ) -> (http::StatusCode, {{ response_name }}) {(
+                        {{ case.code.rust_format() }},
+                        {{ response_name }}::Failure({{ failure_reason.name.camel_case() }}Reason::{{ case.name.camel_case() }} {
+                            {% for arg in case.args %}
+                                {{ arg.name().snake_case() }},
+                            {% endfor %}
+                        })
+                    )}
                 {% endfor %}
-            ) -> (http::StatusCode, {{ response_name }}) {(
-                {{ case.code.rust_format() }},
-                {{ response_name }}::Failure({{ failure_reason.name.camel_case() }}Reason::{{ case.name.camel_case() }} {
-                    {% for arg in case.args %}
-                        {{ arg.name().snake_case() }},
-                    {% endfor %}
-                })
-            )}
-        {% endfor %}
+            {% when None %}
+        {% endmatch %}
 
         {% let error_reason = generator.find_reason(method.response.error.clone(), api.reasons) %}
         {% for case in error_reason.cases %}

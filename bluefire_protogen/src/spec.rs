@@ -364,7 +364,7 @@ pub struct Response {
     pub success: utils::Name,
 
     /// A name of reason type used in case of failure.
-    pub failure: utils::Name,
+    pub failure: Option<utils::Name>,
 
     /// A name of reason type used in case of error.
     pub error: utils::Name,
