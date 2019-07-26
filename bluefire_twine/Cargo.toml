@@ -12,7 +12,7 @@ bson_conversion = ["bson"]
 [dependencies]
 checkmail = "0.1"
 hex = "0.3"
-rand = "0.5"
+rand = "0.7"
 serde = "1.0"
 
 bson = { version = "0.11", optional = true }

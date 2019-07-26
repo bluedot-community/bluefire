@@ -33,7 +33,7 @@ lettre = { version = "0.9", optional = true }
 lettre_email = { version = "0.9", optional = true }
 mongo_driver = { version = "0.12", optional = true }
 postgres = { version = "0.15", optional = true }
-rand = { version = "0.5", optional = true }
+rand = { version = "0.7", optional = true }
 rust-crypto = { version = "0.2", optional = true }
 uuid = { version = "0.7", optional = true, features = ["v4"] }
 
