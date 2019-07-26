@@ -5,10 +5,10 @@
 
 // TODO: Add tests.
 
-use rand::RngCore;
+use byteorder::ByteOrder;
 use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
 
-const ID_SIZE_IN__BYTES: usize = 12;
+const ID_SIZE_IN_BYTES: usize = 12;
 
 /// Enumeration describing conversion errors.
 #[derive(Debug)]
@@ -43,31 +43,56 @@ impl std::fmt::Display for IdError {
 }
 
 /// A container for 12 byte IDs.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
-    data: [u8; ID_SIZE_IN__BYTES],
+    data: [u8; ID_SIZE_IN_BYTES],
 }
 
 impl Id {
     /// Constructs a new random `Id`.
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn new_random() -> Self {
-        let mut data: [u8; ID_SIZE_IN__BYTES] = [0; ID_SIZE_IN__BYTES];
-        rand::thread_rng().fill_bytes(&mut data);
+        use rand::RngCore;
+        let mut data: [u8; ID_SIZE_IN_BYTES] = [0; ID_SIZE_IN_BYTES];
+        let timestamp = chrono::Utc::now().timestamp() as u32;
+        byteorder::BigEndian::write_u32(&mut data[0..4], timestamp);
+        rand::thread_rng().fill_bytes(&mut data[0..ID_SIZE_IN_BYTES]);
+        Id { data }
+    }
+
+    /// Constructs a new random `Id`.
+    #[cfg(target_arch = "wasm32")]
+    pub fn new_random() -> Self {
+        let mut data: [u8; ID_SIZE_IN_BYTES] = [0; ID_SIZE_IN_BYTES];
+
+        let timestamp = js_sys::Date::now() as u32;
+        byteorder::BigEndian::write_u32(&mut data[0..4], timestamp);
+
+        let rand = (std::u64::MAX as f64 * js_sys::Math::random()) as u64;
+        byteorder::BigEndian::write_u64(&mut data[4..ID_SIZE_IN_BYTES], rand);
+
         Id { data }
     }
 
     /// Constructs a new `Id` from a string. The given string has to be 12 bytes long.
     pub fn from_str(id: &str) -> Result<Self, IdError> {
         let bytes: Vec<u8> = hex::decode(id.as_bytes())?;
-        if bytes.len() == ID_SIZE_IN__BYTES {
-            let mut data: [u8; ID_SIZE_IN__BYTES] = [0; ID_SIZE_IN__BYTES];
-            for i in 0..ID_SIZE_IN__BYTES {
+        if bytes.len() == ID_SIZE_IN_BYTES {
+            let mut data: [u8; ID_SIZE_IN_BYTES] = [0; ID_SIZE_IN_BYTES];
+            for i in 0..ID_SIZE_IN_BYTES {
                 data[i] = bytes[i];
             }
             Ok(Id { data })
         } else {
-            Err(IdError::WrongLength { is: bytes.len(), expected: ID_SIZE_IN__BYTES })
+            Err(IdError::WrongLength { is: bytes.len(), expected: ID_SIZE_IN_BYTES })
         }
+    }
+
+    /// Constructs a new `Id` from a string. The given string has to be 12 bytes long.
+    ///
+    /// Panics if fails it's not possible to convert.
+    pub fn from_str_unchecked(id: &str) -> Self {
+        Self::from_str(id).expect("Failed to convert string into Id")
     }
 
     /// Returns a string representation.
@@ -129,6 +154,12 @@ impl<'de> Deserialize<'de> for Id {
 impl std::cmp::PartialEq<str> for Id {
     fn eq(&self, other: &str) -> bool {
         self.to_hex() == *other
+    }
+}
+
+impl std::fmt::Debug for Id {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_hex())
     }
 }
 
