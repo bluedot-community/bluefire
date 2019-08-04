@@ -28,7 +28,7 @@ optional = true
 [dependencies.wasm-bindgen]
 version = "0.2.47"
 optional = true
-features = ["serde-serialize", "nightly"]
+features = ["serde-serialize"]
 
 [dependencies.js-sys]
 version = "0.3.6"
@@ -39,7 +39,7 @@ version = "0.3.6"
 optional = true
 features = [
     "Window", "Document", "HtmlDocument", "Location", "History",
-    "Node", "Element", "EventListener", "EventTarget", "DomTokenList",
+    "Node", "Element", "EventListener", "Event", "KeyboardEvent", "EventTarget", "DomTokenList",
     "HtmlElement", "HtmlInputElement", "HtmlSelectElement", "HtmlTextAreaElement",
     "Request", "RequestInit", "Response", "Headers",
     "console"

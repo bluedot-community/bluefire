@@ -7,6 +7,12 @@
 //! not create any new nodes, instead are just wrappers around existing nodes. They also can't
 //! track lifetime of HTML elements, so are meant to only be a short-lived helpers.
 
+/// Keyboard event key codes.
+pub mod keycode {
+    /// Code for `enter` key.
+    pub const ENTER: u32 = 13;
+}
+
 /// This module contains functionality related to a generic HTML element.
 pub mod element {
     use wasm_bindgen::prelude::*;
@@ -87,6 +93,7 @@ pub mod element {
 pub mod input {
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
+    use web_sys::{Event, KeyboardEvent};
 
     /// Represents a view into an HTML `input` element.
     pub struct Input<'a> {
@@ -172,6 +179,24 @@ pub mod input {
                 let closure = Closure::wrap(callback);
                 let result = element
                     .add_event_listener_with_callback("change", closure.as_ref().unchecked_ref());
+                if let Err(err) = result {
+                    web_error!("bluefire: failed to add event listener: {:?}", err);
+                }
+                closure.forget();
+            }
+        }
+
+        /// Sets a callback to be executed when `enter` key is pressed and released.
+        pub fn on_enter(&self, callback: Box<dyn Fn()>) {
+            if let Some(element) = crate::web::get_element(&self.id) {
+                let closure = Closure::wrap(Box::new(move |event: Event| {
+                    let keyboard_event = event.dyn_ref::<KeyboardEvent>().unwrap();
+                    if keyboard_event.key_code() == super::keycode::ENTER {
+                        callback();
+                    }
+                }) as Box<dyn Fn(Event)>);
+                let result = element
+                    .add_event_listener_with_callback("keyup", closure.as_ref().unchecked_ref());
                 if let Err(err) = result {
                     web_error!("bluefire: failed to add event listener: {:?}", err);
                 }

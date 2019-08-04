@@ -66,11 +66,11 @@ impl Plumbing for Flow {
     {
         let hose = Hose::new(callback);
         let closure_stream = hose.stream.clone();
-        let closure = Closure::new(move |arg| {
+        let closure = Closure::wrap(Box::new(move |arg| {
             let mut stream = closure_stream.borrow_mut();
             let result = stream.callback.valve(arg);
             stream.flow(result);
-        });
+        }) as Box<dyn FnMut(JsValue)>);
         self.promise.then(&closure);
         hose.stream.borrow_mut().closure = Some(closure);
         hose
@@ -125,11 +125,11 @@ impl Stream {
             Ok(Some(promise)) => {
                 if let Some(hose) = self.success.take() {
                     let closure_stream = hose.stream.clone();
-                    let closure = Closure::new(move |arg| {
+                    let closure = Closure::wrap(Box::new(move |arg| {
                         let mut stream = closure_stream.borrow_mut();
                         let result = stream.callback.valve(arg);
                         stream.flow(result);
-                    });
+                    }) as Box<dyn FnMut(JsValue)>);
                     promise.then(&closure);
                     hose.stream.borrow_mut().closure = Some(closure);
                 } else {
