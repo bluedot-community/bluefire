@@ -9,6 +9,9 @@
 #![feature(fn_traits)]
 
 #[cfg(feature = "web")]
+pub use web_sys;
+
+#[cfg(feature = "web")]
 #[macro_use]
 pub mod web;
 

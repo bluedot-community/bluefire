@@ -19,7 +19,7 @@ cookies = ["chrono", "web-sys", "wasm-bindgen", "web"]
 fetch = ["js-sys", "web-sys", "authentication", "bluefire_twine"]
 flow = ["js-sys", "wasm-bindgen", "web-sys", "web"]
 flowex = ["web", "flow"]
-web = ["web-sys"]
+web = ["web-sys", "console_error_panic_hook"]
 
 [dependencies.chrono]
 version = "0.4"
@@ -44,6 +44,10 @@ features = [
     "Request", "RequestInit", "Response", "Headers",
     "console"
 ]
+
+[dependencies.console_error_panic_hook]
+version = "0.1"
+optional = true
 
 [dependencies.maud]
 version = "0.19"

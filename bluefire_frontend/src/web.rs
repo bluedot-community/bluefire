@@ -10,31 +10,38 @@ use wasm_bindgen::JsCast;
 /// Prints a log to the console.
 #[macro_export]
 macro_rules! web_log {
-    ($($arg:tt)*) => { web_sys::console::log_1(&format!($($arg)*).into()); }
+    ($($arg:tt)*) => { $crate::web_sys::console::log_1(&format!($($arg)*).into()); }
 }
 
 /// Prints an error to the console.
 #[macro_export]
 macro_rules! web_error {
-    ($($arg:tt)*) => { web_sys::console::error_1(&format!($($arg)*).into()); }
+    ($($arg:tt)*) => { $crate::web_sys::console::error_1(&format!($($arg)*).into()); }
 }
 
 /// Prints a warning to the console.
 #[macro_export]
 macro_rules! web_warn {
-    ($($arg:tt)*) => { web_sys::console::warn_1(&format!($($arg)*).into()); }
+    ($($arg:tt)*) => { $crate::web_sys::console::warn_1(&format!($($arg)*).into()); }
 }
 
 /// Prints an info to the console.
 #[macro_export]
 macro_rules! web_info {
-    ($($arg:tt)*) => { web_sys::console::info_1(&format!($($arg)*).into()); }
+    ($($arg:tt)*) => { $crate::web_sys::console::info_1(&format!($($arg)*).into()); }
 }
 
 /// Prints a debug to the console.
 #[macro_export]
 macro_rules! web_debug {
-    ($($arg:tt)*) => { web_sys::console::debug_1(&format!($($arg)*).into()); }
+    ($($arg:tt)*) => { $crate::web_sys::console::debug_1(&format!($($arg)*).into()); }
+}
+
+// -------------------------------------------------------------------------------------------------
+
+/// Sets the panic hook so that the panic message is visible in the console.
+pub fn set_panic_hook() {
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 }
 
 // -------------------------------------------------------------------------------------------------
