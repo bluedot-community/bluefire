@@ -6,6 +6,7 @@ members = [
         "bluefire_translations_derive",
 
         "bluefire_twine",
+        "bluefire_macros",
 
         "bluefire_backend",
         "bluefire_frontend",
@@ -21,6 +22,7 @@ bluefire_translations = { path = 'bluefire_translations' }
 bluefire_translations_derive = { path = 'bluefire_translations_derive' }
 
 bluefire_twine = { path = 'bluefire_twine' }
+bluefire_macros = { path = 'bluefire_macros' }
 
 bluefire_backend = { path = 'bluefire_backend' }
 bluefire_frontend = { path = 'bluefire_frontend' }
