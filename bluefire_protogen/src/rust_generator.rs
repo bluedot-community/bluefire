@@ -277,6 +277,7 @@ impl RustGenerator {
         };
         let result = self.generate_api(&api);
         Self::write_output_file(output, &result);
+        println!("cargo:rerun-if-changed={}", input);
     }
 
     /// Generate paths from given input file and save to the given output file.
@@ -288,6 +289,7 @@ impl RustGenerator {
         };
         let result = self.generate_paths(&paths);
         Self::write_output_file(output, &result);
+        println!("cargo:rerun-if-changed={}", input);
     }
 
     /// Generate routes from given input file and save to the given output file.
@@ -299,6 +301,7 @@ impl RustGenerator {
         };
         let result = self.generate_routes(&routes);
         Self::write_output_file(output, &result);
+        println!("cargo:rerun-if-changed={}", input);
     }
 }
 
