@@ -14,6 +14,7 @@ byteorder = "1.3"
 checkmail = "0.1"
 hex = "0.3"
 serde = "1.0"
+serde_derive = "1.0"
 
 bson = { version = "0.11", optional = true }
 

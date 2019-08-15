@@ -3,19 +3,22 @@
 
 //! Provides definition for `Message`.
 
+use serde_derive::{Deserialize, Serialize};
+
 /// A serialized message ready to be sent over HTTP.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Message {
     /// HTTP method of the request.
-    method: &'static str,
+    pub method: &'static str,
 
     /// HTTP path.
-    path: String,
+    pub path: String,
 
     /// Query part of the URL.
-    query: String,
+    pub query: String,
 
     /// Content of the message.
-    body: String,
+    pub body: String,
 }
 
 impl Message {
