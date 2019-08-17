@@ -96,7 +96,7 @@ fn read_translations(config: &Config) -> HashMap<String, HashMap<String, String>
                     };
                     let trans: TranslationFile = match serde_yaml::from_str(&string) {
                         Ok(trans) => trans,
-                        Err(err) => panic!("Parse translation file: {}", err),
+                        Err(err) => panic!("Parse translation file ({:?}): {}", path, err),
                     };
                     result.insert(trans.lang_code.clone(), trans.into_map());
                     processed_files += 1;

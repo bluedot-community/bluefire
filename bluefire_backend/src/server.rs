@@ -70,7 +70,7 @@ impl hyper::service::Service for BlueFireService {
             let req = Self::repack_request(parts, data.to_vec());
             let resp = {
                 let mut bluefire = bluefire_wielder.lock().expect("Mutex lock");
-                bluefire.serve(&req)
+                bluefire.serve(req)
             };
             let resp = Self::repack_response(resp);
             future::ok(resp)

@@ -15,16 +15,18 @@ use crate::context::BlueFire;
 mod utils {
     use super::Request;
 
-    pub fn extract_host_and_path(request: &Request) -> (Option<&str>, &str) {
+    pub fn extract_host_and_path(request: &Request) -> (Option<String>, String) {
         let uri = request.uri();
-        let mut host_name = uri.host();
-        let path = uri.path();
-
-        if host_name.is_none() {
-            if let Some(host_value) = request.headers().get("Host") {
-                host_name = host_value.to_str().ok();
+        let path = uri.path().to_string();
+        let host_name = {
+            if let Some(host_name) = uri.host() {
+                Some(host_name.to_string())
+            } else if let Some(host_name) = request.headers().get("Host") {
+                host_name.to_str().ok().map(|name| name.to_string())
+            } else {
+                None
             }
-        }
+        };
 
         (host_name, path)
     }
@@ -49,7 +51,7 @@ impl NotFoundHandler {
 }
 
 impl Handler for NotFoundHandler {
-    fn handle(&self, _context: &BlueFire, _request: &Request) -> Response {
+    fn handle(&self, _context: &BlueFire, _request: Request) -> Response {
         http::response::Builder::new()
             .status(http::StatusCode::NOT_FOUND)
             .body(NOT_FOUND_BODY.into())
@@ -117,8 +119,8 @@ impl Host {
     pub fn get_host_name(&self) -> Option<String> {
         if let Some(host_name) = self.host_name {
             match self.scheme {
-                Scheme::Http => Some(String::from("http://") + host_name),
-                Scheme::Https => Some(String::from("https://") + host_name),
+                Scheme::Http => Some(String::from("http://") + &host_name),
+                Scheme::Https => Some(String::from("https://") + &host_name),
             }
         } else {
             None
@@ -346,7 +348,7 @@ impl Route {
 
 /// `Router` allows to find an appropriate handler for a request.
 pub struct Router {
-    routes: HashMap<Option<&'static str>, (Host, Route)>,
+    routes: HashMap<Option<String>, (Host, Route)>,
     not_found_handler: Box<dyn Handler>,
 }
 
@@ -354,11 +356,11 @@ impl Router {
     /// For a given request, basing on its path returns
     ///  - an appropriate handler for the request and
     ///  - a map parameters extracted from the path.
-    pub fn route<'a>(&'a self, request: &'a Request) -> (&'a Box<dyn Handler>, ParamsMap) {
+    pub fn route<'a, 'b>(&'a self, request: &'b Request) -> (&'a Box<dyn Handler>, ParamsMap) {
         let mut params = ParamsMap::new();
         let (host_name, path) = utils::extract_host_and_path(request);
 
-        if let Some((host, toplevel_route)) = self.get_host(host_name) {
+        if let Some((host, toplevel_route)) = self.get_host(&host_name) {
             let mut routes = &toplevel_route.routes;
             let mut handler = toplevel_route.get_handler();
             for segment in path.split("/") {
@@ -405,8 +407,8 @@ impl Router {
 }
 
 impl Router {
-    fn get_host<'a>(&'a self, host_name: Option<&'a str>) -> Option<&'a (Host, Route)> {
-        let result = self.routes.get(&host_name);
+    fn get_host<'a, 'b>(&'a self, host_name: &'b Option<String>) -> Option<&'a (Host, Route)> {
+        let result = self.routes.get(host_name);
         if result.is_none() && host_name.is_some() {
             self.routes.get(&None)
         } else {
@@ -434,7 +436,7 @@ impl ReverseRouter {
 
 /// Builder for the server router and reverse router.
 pub struct RoutingBuilder {
-    routes: HashMap<Option<&'static str>, (Host, Route)>,
+    routes: HashMap<Option<String>, (Host, Route)>,
 }
 
 impl RoutingBuilder {
@@ -445,7 +447,7 @@ impl RoutingBuilder {
 
     /// Adds a new host with its routes.
     pub fn insert(&mut self, host: Host, route: Route) {
-        self.routes.insert(host.host_name, (host, route));
+        self.routes.insert(host.host_name.map(|name| name.to_string()), (host, route));
     }
 
     /// Builds the router and the reverse router.

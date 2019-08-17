@@ -26,7 +26,7 @@ pub type ParamsMap = HashMap<&'static str, String>;
 /// A trait for request handlers.
 pub trait Handler: std::fmt::Debug + Send + Sync {
     /// Handler the request.
-    fn handle(&self, context: &BlueFire, request: &Request) -> Response;
+    fn handle(&self, context: &BlueFire, request: Request) -> Response;
 
     /// Clone the handler.
     fn duplicate(&self) -> Box<dyn Handler>;

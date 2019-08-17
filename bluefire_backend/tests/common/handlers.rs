@@ -19,7 +19,7 @@ impl TestHandler {
 }
 
 impl Handler for TestHandler {
-    fn handle(&self, _context: &BlueFire, _request: &Request) -> Response {
+    fn handle(&self, _context: &BlueFire, _request: Request) -> Response {
         http::response::Builder::new()
             .status(http::StatusCode::OK)
             .body(self.id.clone().into())

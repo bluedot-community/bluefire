@@ -3,6 +3,7 @@
 
 //! Back-end part of `BlueFire` web framework.
 
+#![feature(associated_type_defaults)]
 #![warn(missing_docs)]
 
 #[macro_use]
@@ -23,6 +24,7 @@ pub use self::context::{BlueFire, BlueFireKindler, BlueFireWielder};
 pub use self::context::{Extension, Extensions, Middleware};
 
 #[cfg(feature = "rest")]
+#[macro_use]
 pub mod rest;
 
 #[cfg(feature = "database")]

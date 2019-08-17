@@ -42,7 +42,7 @@ mod env {
             }
 
             let request = builder.body("".into()).expect("Failed to build empty GET body");
-            self.wielder.serve(&request)
+            self.wielder.serve(request)
         }
     }
 }

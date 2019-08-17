@@ -219,16 +219,16 @@ impl BlueFireWielder {
     }
 
     /// Finds a handler for the request basing on the request path and executes it.
-    pub fn route(&mut self, request: &common::Request) -> common::Response {
-        let (handler, params) = self.router.route(request);
+    pub fn route(&mut self, request: common::Request) -> common::Response {
+        let (handler, params) = self.router.route(&request);
         self.context.params = params;
         handler.handle(&mut self.context, request)
     }
 
     /// Handles the request - notifies the middlewares and executes the handler.
-    pub fn serve(&mut self, request: &common::Request) -> common::Response {
+    pub fn serve(&mut self, request: common::Request) -> common::Response {
         self.apply_middlewares(&request);
-        self.route(&request)
+        self.route(request)
     }
 
     /// Returns immutable handler context.

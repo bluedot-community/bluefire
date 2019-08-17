@@ -9,10 +9,8 @@
 pub mod constants;
 pub mod id;
 pub mod message;
-pub mod method;
 pub mod validation;
 
 pub use crate::id::Id;
 pub use crate::message::Message;
-pub use crate::method::Method;
 pub use crate::validation::ValidationResult;

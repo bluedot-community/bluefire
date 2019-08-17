@@ -58,7 +58,7 @@ mod env {
                 .body("".into())
                 .expect("Failed to build empty GET body");
 
-            self.wielder.route(&request)
+            self.wielder.route(request)
         }
 
         pub fn params(&self) -> &ParamsMap {

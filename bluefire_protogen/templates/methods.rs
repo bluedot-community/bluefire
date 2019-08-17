@@ -95,6 +95,22 @@
         {% endfor %}
     }
 
+    impl std::convert::TryFrom<http::Request<String>> for {{ request_name }} {
+        {% if method.request.method == spec::HttpMethod::Get %}
+            type Error = serde::de::value::Error;
+        {% else %}
+            type Error = serde_json::error::Error;
+        {% endif %}
+
+        fn try_from(request: http::Request<String>) -> Result<{{ request_name }}, Self::Error> {
+            {% if method.request.method == spec::HttpMethod::Get %}
+                Self::from_query_string(&request.uri().query().unwrap_or(""))
+            {% else %}
+                Self::from_json_string(&request.body())
+            {% endif %}
+        }
+     }
+
     {# RESPONSE #}
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -162,13 +178,57 @@
                 })
             )}
         {% endfor %}
+
+        fn get_code(&self) -> http::StatusCode {
+            match self {
+                {{ response_name }}::Success(yeeld) => yeeld.get_code(),
+                {% match method.response.failure %}
+                    {% when Some with (failure) %}
+                        {{ response_name }}::Failure(failure) => failure.get_code(),
+                    {% when None %}
+                {% endmatch %}
+                {{ response_name }}::Error(error) => error.get_code(),
+            }
+        }
+    }
+
+    impl From<{{ response_name }}> for http::Response<String> {
+        fn from(response: {{ response_name }}) -> http::Response<String> {
+            http::response::Builder::new()
+                .status(response.get_code())
+                .header(http::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+                .body(serde_json::to_string(&response).expect("Serialize response to JSON"))
+                .expect("Build response")
+        }
+    }
+
+    impl From<{{ method.response.success.camel_case() }}Yield> for {{ response_name }} {
+        fn from(yeeld: {{ method.response.success.camel_case() }}Yield) -> {{ response_name }} {
+            {{ response_name }}::Success(yeeld)
+        }
+    }
+
+    {% match method.response.failure %}
+        {% when Some with (failure) %}
+            impl From<{{ failure.camel_case() }}Reason> for {{ response_name }} {
+                fn from(failure: {{ failure.camel_case() }}Reason) -> {{ response_name }} {
+                    {{ response_name }}::Failure(failure)
+                }
+            }
+        {% when None %}
+    {% endmatch %}
+
+    impl From<{{ method.response.error.camel_case() }}Reason> for {{ response_name }} {
+        fn from(error: {{ method.response.error.camel_case() }}Reason) -> {{ response_name }} {
+            {{ response_name }}::Error(error)
+        }
     }
 
     {# METHODS #}
 
     pub struct {{ method_name }};
 
-    impl bluefire_twine::Method for {{ method_name }} {
+    impl bluefire_backend::rest::Method for {{ method_name }} {
         type PathParams = {{ path_name }};
         type Request = {{ request_name }};
         type Response = {{ response_name }};

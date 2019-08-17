@@ -47,6 +47,7 @@
         }
     }
 
+    {# TODO: Remove this `impl`. Responses should be constructed from `*Response`s only. #}
     impl From<{{ name }}> for http::Response<String> {
         fn from(reason: {{ name }}) -> http::Response<String> {
             let mut value = serde_json::Map::new();

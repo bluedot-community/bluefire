@@ -13,7 +13,7 @@ database = []
 database_mongodb = ["database", "bson", "mongo_driver"]
 database_postgresql = ["database", "postgres"]
 email = ["lettre", "lettre_email", "uuid"]
-rest = []
+rest = ["serde", "serde_derive", "serde_json", "bluefire_twine"]
 router = []
 scheduler = []
 server = ["futures", "hyper"]
@@ -35,6 +35,9 @@ mongo_driver = { version = "0.12", optional = true }
 postgres = { version = "0.15", optional = true }
 rand = { version = "0.7", optional = true }
 rust-crypto = { version = "0.2", optional = true }
+serde = { version = "1.0", optional = true }
+serde_derive = { version = "1.0", optional = true }
+serde_json = { version = "1.0", optional = true }
 uuid = { version = "0.7", optional = true, features = ["v4"] }
 
 bluefire_twine = { version = "0.1.0", optional = true }
