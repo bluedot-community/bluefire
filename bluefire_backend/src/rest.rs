@@ -3,6 +3,7 @@
 
 //! The REST-related functionality.
 
+use std::collections::HashMap;
 use std::convert::TryFrom;
 
 use bluefire_twine::constants;
@@ -150,11 +151,21 @@ impl From<DefaultResponse> for Response {
     }
 }
 
+/// Default (empty) path.
+pub struct DefaultPath;
+
+impl std::convert::TryFrom<&HashMap<&'static str, String>> for DefaultPath {
+    type Error = &'static str;
+    fn try_from(_: &HashMap<&'static str, String>) -> Result<Self, &'static str> {
+        Ok(DefaultPath)
+    }
+}
+
 /// Implementations of `Method` trait for "GET" method requests.
 pub struct DefaultQueryMethod;
 
 impl Method for DefaultQueryMethod {
-    type PathParams = ();
+    type PathParams = DefaultPath;
     type Request = DefaultQueryRequest;
     type Response = DefaultResponse;
 }
@@ -163,7 +174,7 @@ impl Method for DefaultQueryMethod {
 pub struct DefaultJsonMethod;
 
 impl Method for DefaultJsonMethod {
-    type PathParams = ();
+    type PathParams = DefaultPath;
     type Request = DefaultJsonRequest;
     type Response = DefaultResponse;
 }
@@ -213,6 +224,10 @@ pub trait TypedRestHandler: Handler {
             <<Self as TypedRestHandler>::GetMethod as Method>::Request,
             serde::de::value::Error,
         >,
+        _path: Result<
+            <<Self as TypedRestHandler>::GetMethod as Method>::PathParams,
+            &'static str,
+        >
     ) -> Reply<<<Self as TypedRestHandler>::GetMethod as Method>::Response>;
 
     /// "POST" method request handler.
@@ -223,6 +238,10 @@ pub trait TypedRestHandler: Handler {
             <<Self as TypedRestHandler>::PostMethod as Method>::Request,
             serde_json::Error,
         >,
+        _path: Result<
+            <<Self as TypedRestHandler>::PostMethod as Method>::PathParams,
+            &'static str,
+        >
     ) -> Reply<<<Self as TypedRestHandler>::PostMethod as Method>::Response>;
 
     /// "PUT" method request handler.
@@ -233,6 +252,10 @@ pub trait TypedRestHandler: Handler {
             <<Self as TypedRestHandler>::PutMethod as Method>::Request,
             serde_json::Error,
         >,
+        _path: Result<
+            <<Self as TypedRestHandler>::PutMethod as Method>::PathParams,
+            &'static str,
+        >
     ) -> Reply<<<Self as TypedRestHandler>::PutMethod as Method>::Response>;
 
     /// "PATCH" method request handler.
@@ -243,6 +266,10 @@ pub trait TypedRestHandler: Handler {
             <<Self as TypedRestHandler>::PatchMethod as Method>::Request,
             serde_json::Error,
         >,
+        _path: Result<
+            <<Self as TypedRestHandler>::PatchMethod as Method>::PathParams,
+            &'static str,
+        >
     ) -> Reply<<<Self as TypedRestHandler>::PatchMethod as Method>::Response>;
 
     /// "DELETE" method request handler.
@@ -252,6 +279,10 @@ pub trait TypedRestHandler: Handler {
         _request: Result<
             <<Self as TypedRestHandler>::DeleteMethod as Method>::Request,
             serde_json::Error,
+        >,
+        _path: Result<
+            <<Self as TypedRestHandler>::DeleteMethod as Method>::PathParams,
+            &'static str,
         >,
     ) -> Reply<<<Self as TypedRestHandler>::DeleteMethod as Method>::Response>;
 }
@@ -266,26 +297,35 @@ macro_rules! impl_handler_via_typed_handler {
                 context: &bluefire_backend::BlueFire,
                 request: bluefire_backend::Request,
             ) -> bluefire_backend::Response {
+                let params = context.params();
                 match request.method() {
                     &http::method::Method::OPTIONS => self.options(context, request),
-                    &http::method::Method::GET => match self.get(context, request.try_into()) {
-                        Ok(response) => response.into(),
-                        Err(response) => response.into(),
-                    },
-                    &http::method::Method::POST => match self.post(context, request.try_into()) {
-                        Ok(response) => response.into(),
-                        Err(response) => response.into(),
-                    },
-                    &http::method::Method::PUT => match self.put(context, request.try_into()) {
-                        Ok(response) => response.into(),
-                        Err(response) => response.into(),
-                    },
-                    &http::method::Method::PATCH => match self.patch(context, request.try_into()) {
-                        Ok(response) => response.into(),
-                        Err(response) => response.into(),
-                    },
+                    &http::method::Method::GET => {
+                        match self.get(context, request.try_into(), params.try_into()) {
+                            Ok(response) => response.into(),
+                            Err(response) => response.into(),
+                        }
+                    }
+                    &http::method::Method::POST => {
+                        match self.post(context, request.try_into(), params.try_into()) {
+                            Ok(response) => response.into(),
+                            Err(response) => response.into(),
+                        }
+                    }
+                    &http::method::Method::PUT => {
+                        match self.put(context, request.try_into(), params.try_into()) {
+                            Ok(response) => response.into(),
+                            Err(response) => response.into(),
+                        }
+                    }
+                    &http::method::Method::PATCH => {
+                        match self.patch(context, request.try_into(), params.try_into()) {
+                            Ok(response) => response.into(),
+                            Err(response) => response.into(),
+                        }
+                    }
                     &http::method::Method::DELETE => {
-                        match self.delete(context, request.try_into()) {
+                        match self.delete(context, request.try_into(), params.try_into()) {
                             Ok(response) => response.into(),
                             Err(response) => response.into(),
                         }
@@ -311,6 +351,7 @@ macro_rules! default_get_method {
             &self,
             _: &BlueFire,
             _: Result<bluefire_backend::rest::DefaultQueryRequest, serde::de::value::Error>,
+            _: Result<bluefire_backend::rest::DefaultPath, &'static str>,
         ) -> bluefire_backend::rest::Reply<bluefire_backend::rest::DefaultResponse> {
             Ok(bluefire_backend::rest::DefaultResponse)
         }
@@ -327,6 +368,7 @@ macro_rules! default_post_method {
             &self,
             _: &BlueFire,
             _: Result<bluefire_backend::rest::DefaultJsonRequest, serde_json::Error>,
+            _: Result<bluefire_backend::rest::DefaultPath, &'static str>,
         ) -> bluefire_backend::rest::Reply<bluefire_backend::rest::DefaultResponse> {
             Ok(bluefire_backend::rest::DefaultResponse)
         }
@@ -343,6 +385,7 @@ macro_rules! default_put_method {
             &self,
             _: &BlueFire,
             _: Result<bluefire_backend::rest::DefaultJsonRequest, serde_json::Error>,
+            _: Result<bluefire_backend::rest::DefaultPath, &'static str>,
         ) -> bluefire_backend::rest::Reply<bluefire_backend::rest::DefaultResponse> {
             Ok(bluefire_backend::rest::DefaultResponse)
         }
@@ -359,6 +402,7 @@ macro_rules! default_patch_method {
             &self,
             _: &BlueFire,
             _: Result<bluefire_backend::rest::DefaultJsonRequest, serde_json::Error>,
+            _: Result<bluefire_backend::rest::DefaultPath, &'static str>,
         ) -> bluefire_backend::rest::Reply<bluefire_backend::rest::DefaultResponse> {
             Ok(bluefire_backend::rest::DefaultResponse)
         }
@@ -375,6 +419,7 @@ macro_rules! default_delete_method {
             &self,
             _: &BlueFire,
             _: Result<bluefire_backend::rest::DefaultJsonRequest, serde_json::Error>,
+            _: Result<bluefire_backend::rest::DefaultPath, &'static str>,
         ) -> bluefire_backend::rest::Reply<bluefire_backend::rest::DefaultResponse> {
             Ok(bluefire_backend::rest::DefaultResponse)
         }
