@@ -168,39 +168,27 @@ pub enum ContainerType {
 /// Represents and argument of request or return value of response.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum Member {
+pub enum MemberType {
     /// Simple (predefined) member.
-    Simple {
-        /// Member name.
-        name: utils::Name,
-
-        /// Members type.
-        #[serde(rename = "type")]
-        tipe: SimpleType,
-    },
-
-    /// A members inside of a predefined container.
-    Contained {
-        /// Members name.
-        name: utils::Name,
-
-        /// Members type.
-        #[serde(rename = "type")]
-        tipe: utils::Name,
-
-        /// Members container.
-        container: ContainerType,
-    },
+    Simple(SimpleType),
 
     /// A member type defined in API specification.
-    Defined {
-        /// Members name.
-        name: utils::Name,
+    Defined(utils::Name),
+}
 
-        /// Members type (this type must be defined in the API specification).
-        #[serde(rename = "type")]
-        tipe: utils::Name,
-    },
+/// Represents and argument of request or return value of response.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Member {
+    /// Member name.
+    pub name: utils::Name,
+
+    /// Members type.
+    #[serde(rename = "type")]
+    pub tipe: MemberType,
+
+    /// Members container.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub container: Option<ContainerType>,
 }
 
 /// Defines how a type should be represented in the API protocol (JSON).
@@ -553,13 +541,23 @@ pub fn routes_to_paths(routes: &Vec<Route>) -> Vec<Path> {
 mod tests {
     use serde_yaml;
 
-    use crate::spec::{ContainerType, Member, Route, Segment, SimpleType, TypeDef, TypeRepr};
+    use crate::spec::{
+        ContainerType, Member, MemberType, Route, Segment, SimpleType, TypeDef, TypeRepr,
+    };
     use crate::utils::Name;
 
     #[test]
     fn test_typedef_serialization() {
-        let member1 = Member::Defined { name: Name::new("abcd"), tipe: Name::new("custom") };
-        let member2 = Member::Defined { name: Name::new("edfg"), tipe: Name::new("custom") };
+        let member1 = Member {
+            name: Name::new("abcd"),
+            tipe: MemberType::Defined(Name::new("custom")),
+            container: None,
+        };
+        let member2 = Member {
+            name: Name::new("edfg"),
+            tipe: MemberType::Defined(Name::new("custom")),
+            container: None,
+        };
         let members = vec![member1, member2];
         assert_eq!(
             serde_yaml::to_string(&TypeDef {
@@ -597,10 +595,10 @@ mod tests {
     #[test]
     fn test_member_serialization() {
         assert_eq!(
-            serde_yaml::to_string(&Member::Contained {
+            serde_yaml::to_string(&Member {
                 name: Name::new("abc"),
-                tipe: Name::new("custom"),
-                container: ContainerType::Vector,
+                tipe: MemberType::Defined(Name::new("custom")),
+                container: Some(ContainerType::Vector),
             })
             .unwrap(),
             "---\nname: abc\ntype: custom\ncontainer: vector"
@@ -613,23 +611,49 @@ mod tests {
         let d2 = "---\nname: abc\ntype: string".to_owned();
         let d3 = "---\nname: abc\ntype: custom".to_owned();
         let d4 = "---\nname: abc\ntype: string-2".to_owned();
-        let d5 = "---\nname: abc\ntype: custom\ncontainer: vector".to_owned();
+        let d5 = "---\nname: abc\ntype: string\ncontainer: optional".to_owned();
+        let d6 = "---\nname: abc\ntype: custom\ncontainer: vector".to_owned();
         let s1 = serde_yaml::from_str::<Member>(&d1).unwrap();
         let s2 = serde_yaml::from_str::<Member>(&d2).unwrap();
         let s3 = serde_yaml::from_str::<Member>(&d3).unwrap();
         let s4 = serde_yaml::from_str::<Member>(&d4).unwrap();
         let s5 = serde_yaml::from_str::<Member>(&d5).unwrap();
-        assert_eq!(s1, Member::Simple { name: Name::new("abc"), tipe: SimpleType::U8 });
-        assert_eq!(s2, Member::Simple { name: Name::new("abc"), tipe: SimpleType::Str });
-        assert_eq!(s3, Member::Defined { name: Name::new("abc"), tipe: Name::new("custom") });
-        assert_eq!(s4, Member::Defined { name: Name::new("abc"), tipe: Name::new("string-2") });
-        assert_eq!(
-            s5,
-            Member::Contained {
-                name: Name::new("abc"),
-                tipe: Name::new("custom"),
-                container: ContainerType::Vector,
-            }
-        );
+        let s6 = serde_yaml::from_str::<Member>(&d6).unwrap();
+        let m1 = Member {
+            name: Name::new("abc"),
+            tipe: MemberType::Simple(SimpleType::U8),
+            container: None,
+        };
+        let m2 = Member {
+            name: Name::new("abc"),
+            tipe: MemberType::Simple(SimpleType::Str),
+            container: None,
+        };
+        let m3 = Member {
+            name: Name::new("abc"),
+            tipe: MemberType::Defined(Name::new("custom")),
+            container: None,
+        };
+        let m4 = Member {
+            name: Name::new("abc"),
+            tipe: MemberType::Defined(Name::new("string-2")),
+            container: None,
+        };
+        let m5 = Member {
+            name: Name::new("abc"),
+            tipe: MemberType::Simple(SimpleType::Str),
+            container: Some(ContainerType::Optional),
+        };
+        let m6 = Member {
+            name: Name::new("abc"),
+            tipe: MemberType::Defined(Name::new("custom")),
+            container: Some(ContainerType::Vector),
+        };
+        assert_eq!(s1, m1);
+        assert_eq!(s2, m2);
+        assert_eq!(s3, m3);
+        assert_eq!(s4, m4);
+        assert_eq!(s5, m5);
+        assert_eq!(s6, m6);
     }
 }

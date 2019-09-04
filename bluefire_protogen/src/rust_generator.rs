@@ -55,21 +55,22 @@ impl spec::SimpleType {
 
 impl spec::Member {
     fn name(&self) -> &utils::Name {
-        match self {
-            spec::Member::Simple { name, .. } => name,
-            spec::Member::Defined { name, .. } => name,
-            spec::Member::Contained { name, .. } => name,
-        }
+        &self.name
     }
 
     fn rust_type(&self) -> String {
-        match self {
-            spec::Member::Simple { tipe, .. } => tipe.rust_format().to_string(),
-            spec::Member::Defined { tipe, .. } => tipe.camel_case(),
-            spec::Member::Contained { tipe, container, .. } => match container {
-                spec::ContainerType::Vector => format!("Vec<{}>", tipe.camel_case()),
-                spec::ContainerType::Optional => format!("Option<{}>", tipe.camel_case()),
-            },
+        let raw_type = match &self.tipe {
+            spec::MemberType::Simple(tipe) => tipe.rust_format().to_string(),
+            spec::MemberType::Defined(name) => name.camel_case(),
+        };
+
+        if let Some(container) = &self.container {
+            match container {
+                spec::ContainerType::Vector => format!("Vec<{}>", raw_type),
+                spec::ContainerType::Optional => format!("Option<{}>", raw_type),
+            }
+        } else {
+            raw_type
         }
     }
 }

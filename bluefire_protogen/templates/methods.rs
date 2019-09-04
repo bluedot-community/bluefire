@@ -67,31 +67,31 @@
         }
 
         {% for member in method.request.args %}
-            {% match member %}
-                {% when spec::Member::Simple with {name, tipe} %}
-                    {# nothing to generate #}
-                {% when spec::Member::Contained with {name, tipe, container} %}
-                    {# nothing to generate #}
-                {% when spec::Member::Defined with {name, tipe} %}
-                    {% let found = generator.find_type(tipe, api.types) %}
-                    {% match found.container %}
-                        {% when spec::TypeRepr::Simple with {simple_type, validation} %}
-                            {% if validation.is_some() %}
-                                pub fn validate_{{ member.name().snake_case() }}(&self)
-                                -> bluefire_twine::ValidationResult<{{ found.name.camel_case() }}ValidationResult> {
-                                    __validate_{{ found.name.snake_case() }}(&self.{{ member.name().snake_case() }})
-                                }
-                            {% endif %}
-                        {% when spec::TypeRepr::External %}
-                            {# nothing to generate #}
-                        {% when spec::TypeRepr::Struct with {members} %}
-                            {# nothing to generate #}
-                        {% when spec::TypeRepr::Union with {members} %}
-                            {# nothing to generate #}
-                        {% when spec::TypeRepr::Enum with {values} %}
-                            {# nothing to generate #}
-                    {% endmatch %}
-            {% endmatch %}
+            {% if member.container.is_none() %}
+                {% match member.tipe %}
+                    {% when spec::MemberType::Simple with (tipe) %}
+                        {# nothing to generate #}
+                    {% when spec::MemberType::Defined with (name) %}
+                        {% let found = generator.find_type(name, api.types) %}
+                        {% match found.container %}
+                            {% when spec::TypeRepr::Simple with {simple_type, validation} %}
+                                {% if validation.is_some() %}
+                                    pub fn validate_{{ member.name().snake_case() }}(&self)
+                                    -> bluefire_twine::ValidationResult<{{ found.name.camel_case() }}ValidationResult> {
+                                        __validate_{{ found.name.snake_case() }}(&self.{{ member.name().snake_case() }})
+                                    }
+                                {% endif %}
+                            {% when spec::TypeRepr::External %}
+                                {# nothing to generate #}
+                            {% when spec::TypeRepr::Struct with {members} %}
+                                {# nothing to generate #}
+                            {% when spec::TypeRepr::Union with {members} %}
+                                {# nothing to generate #}
+                            {% when spec::TypeRepr::Enum with {values} %}
+                                {# nothing to generate #}
+                        {% endmatch %}
+                {% endmatch %}
+            {% endif %}
         {% endfor %}
     }
 

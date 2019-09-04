@@ -224,10 +224,7 @@ pub trait TypedRestHandler: Handler {
             <<Self as TypedRestHandler>::GetMethod as Method>::Request,
             serde::de::value::Error,
         >,
-        _path: Result<
-            <<Self as TypedRestHandler>::GetMethod as Method>::PathParams,
-            &'static str,
-        >
+        _path: Result<<<Self as TypedRestHandler>::GetMethod as Method>::PathParams, &'static str>,
     ) -> Reply<<<Self as TypedRestHandler>::GetMethod as Method>::Response>;
 
     /// "POST" method request handler.
@@ -238,10 +235,7 @@ pub trait TypedRestHandler: Handler {
             <<Self as TypedRestHandler>::PostMethod as Method>::Request,
             serde_json::Error,
         >,
-        _path: Result<
-            <<Self as TypedRestHandler>::PostMethod as Method>::PathParams,
-            &'static str,
-        >
+        _path: Result<<<Self as TypedRestHandler>::PostMethod as Method>::PathParams, &'static str>,
     ) -> Reply<<<Self as TypedRestHandler>::PostMethod as Method>::Response>;
 
     /// "PUT" method request handler.
@@ -252,10 +246,7 @@ pub trait TypedRestHandler: Handler {
             <<Self as TypedRestHandler>::PutMethod as Method>::Request,
             serde_json::Error,
         >,
-        _path: Result<
-            <<Self as TypedRestHandler>::PutMethod as Method>::PathParams,
-            &'static str,
-        >
+        _path: Result<<<Self as TypedRestHandler>::PutMethod as Method>::PathParams, &'static str>,
     ) -> Reply<<<Self as TypedRestHandler>::PutMethod as Method>::Response>;
 
     /// "PATCH" method request handler.
@@ -269,7 +260,7 @@ pub trait TypedRestHandler: Handler {
         _path: Result<
             <<Self as TypedRestHandler>::PatchMethod as Method>::PathParams,
             &'static str,
-        >
+        >,
     ) -> Reply<<<Self as TypedRestHandler>::PatchMethod as Method>::Response>;
 
     /// "DELETE" method request handler.
