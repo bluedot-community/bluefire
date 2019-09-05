@@ -303,11 +303,12 @@ impl Clone for UserInfo {
 // -------------------------------------------------------------------------------------------------
 
 /// User info for use in templates.
+#[derive(Debug)]
 pub struct UserTemplateInfo {
     /// Tells if the user is authenticated.
     pub is_authenticated: bool,
 
-    /// Username. Empty is the user is not authenticated.
+    /// Username. Empty if the user is not authenticated.
     pub username: String,
 }
 
