@@ -196,7 +196,6 @@
         fn from(response: {{ response_name }}) -> http::Response<String> {
             http::response::Builder::new()
                 .status(response.get_code())
-                .header(http::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
                 .body(serde_json::to_string(&response).expect("Serialize response to JSON"))
                 .expect("Build response")
         }

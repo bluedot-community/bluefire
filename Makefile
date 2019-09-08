@@ -10,5 +10,8 @@ check: force
 test: force
 	cargo test --all --all-features -- --nocapture
 
+clean: force
+	rm -rf target
+
 force:
 

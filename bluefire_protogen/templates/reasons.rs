@@ -56,7 +56,6 @@
 
             http::response::Builder::new()
                 .status(reason.get_code())
-                .header(http::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
                 .body(serde_json::to_string(&value).expect("Serialize response to JSON"))
                 .expect("Build response")
         }

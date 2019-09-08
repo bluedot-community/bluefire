@@ -118,6 +118,7 @@ where
 // -------------------------------------------------------------------------------------------------
 
 /// Default (dummy) request for "GET" method requests.
+#[derive(Debug)]
 pub struct DefaultQueryRequest;
 
 impl TryFrom<Request> for DefaultQueryRequest {
@@ -129,6 +130,7 @@ impl TryFrom<Request> for DefaultQueryRequest {
 }
 
 /// Default (dummy) request for requests other than "GET".
+#[derive(Debug)]
 pub struct DefaultJsonRequest;
 
 impl TryFrom<Request> for DefaultJsonRequest {
@@ -140,6 +142,7 @@ impl TryFrom<Request> for DefaultJsonRequest {
 }
 
 /// Default (empty) response.
+#[derive(Debug)]
 pub struct DefaultResponse;
 
 impl From<DefaultResponse> for Response {
@@ -209,7 +212,6 @@ pub trait TypedRestHandler: Handler {
     fn options(&self, _context: &BlueFire, _request: Request) -> Response {
         http::response::Builder::new()
             .status(http::StatusCode::OK)
-            .header(http::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
             .header(http::header::ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, PATCH, DELETE")
             .header(http::header::ACCESS_CONTROL_ALLOW_HEADERS, constants::BLUEFIRE_TOKEN_HEADER)
             .body(String::new())
@@ -289,7 +291,7 @@ macro_rules! impl_handler_via_typed_handler {
                 request: bluefire_backend::Request,
             ) -> bluefire_backend::Response {
                 let params = context.params();
-                match request.method() {
+                let mut response = match request.method() {
                     &http::method::Method::OPTIONS => self.options(context, request),
                     &http::method::Method::GET => {
                         match self.get(context, request.try_into(), params.try_into()) {
@@ -322,7 +324,12 @@ macro_rules! impl_handler_via_typed_handler {
                         }
                     }
                     _ => self.make_default_response(request),
-                }
+                };
+                response.headers_mut().append(
+                    http::header::ACCESS_CONTROL_ALLOW_ORIGIN,
+                    "*".parse().expect("Parse access control origin"),
+                );
+                response
             }
 
             fn duplicate(&self) -> Box<dyn bluefire_backend::Handler> {
