@@ -428,7 +428,15 @@ pub struct ReverseRouter {
 impl ReverseRouter {
     /// Returns the path for given label if the label was defined.
     pub fn reverse(&self, label: &str) -> Option<&Path> {
-        self.paths.get(label)
+        let result = self.paths.get(label);
+        if result.is_none() {
+            log::error!(
+                "Failed to find reverse for '{}'. Available labels are: {:?}",
+                label,
+                self.paths.keys()
+            );
+        }
+        result
     }
 }
 

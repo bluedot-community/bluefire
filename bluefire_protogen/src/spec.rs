@@ -322,7 +322,7 @@ pub enum Segment {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Route {
     /// Name of the path represented by this `Route` node.
-    /// Used to generate a viewer struct name.
+    /// Used to generate label and viewer struct name.
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub name: Option<utils::Name>,
 
@@ -392,8 +392,11 @@ pub struct Method {
 /// Represents a top-level (index) route.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Routes {
+    /// Specifies a prefix for labels. If not present, labels are not generated.
+    pub label_prefix: Option<String>,
+
     /// Name of the path represented by this `Routes` node.
-    /// Used to generate a viewer struct name.
+    /// Used to generate label and viewer struct name.
     pub name: Option<utils::Name>,
 
     /// A list of sub-routes.

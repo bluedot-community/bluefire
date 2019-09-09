@@ -159,12 +159,17 @@ impl<'a> RustMethodsTemplate<'a> {
 #[template(path = "route.rs", escape = "none")]
 struct RustRouteTemplate<'a> {
     pub route: &'a spec::Route,
+    pub label_prefix: &'a Option<String>,
     pub generator: GeneratorCallback,
 }
 
 impl<'a> RustRouteTemplate<'a> {
-    pub fn new(route: &'a spec::Route, generator: GeneratorCallback) -> Self {
-        Self { route, generator }
+    pub fn new(
+        route: &'a spec::Route,
+        label_prefix: &'a Option<String>,
+        generator: GeneratorCallback,
+    ) -> Self {
+        Self { route, label_prefix, generator }
     }
 }
 
@@ -195,8 +200,8 @@ impl GeneratorCallback {
     }
 
     /// Renders the route template with the give route.
-    pub fn route(&self, route: &spec::Route) -> String {
-        RustRouteTemplate::new(route, self.clone()).render().expect("Render route template")
+    pub fn route(&self, route: &spec::Route, label_prefix: &Option<String>) -> String {
+        RustRouteTemplate::new(route, label_prefix, self.clone()).render().expect("Render route template")
     }
 
     /// Searches for a `TypeDef` with given name.
