@@ -264,7 +264,7 @@ impl RustGenerator {
 
     /// Generate routes (`bluefire_backend::Route`).
     pub fn generate_routes(self, routes: &spec::Routes) -> String {
-        RustRoutesTemplate::new(&routes, GeneratorCallback::new())
+        RustRoutesTemplate::new(routes, GeneratorCallback::new())
             .render()
             .expect("Render routes template")
     }

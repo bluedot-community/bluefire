@@ -161,7 +161,7 @@ fn parse_attibute_args(args: &syn::MetaList) -> Config {
         match arg {
             syn::NestedMeta::Meta(meta) => match meta {
                 syn::Meta::NameValue(value) => {
-                    let a = value.ident.to_string();
+                    let a = value.path.get_ident().expect("Get ident").to_string();
                     match a.as_ref() {
                         "path" => match value.lit {
                             syn::Lit::Str(ref lit_str) => {
@@ -191,7 +191,8 @@ fn parse_attributes(attrs: &Vec<syn::Attribute>) -> Config {
     for attr in attrs.iter() {
         match attr.parse_meta() {
             Ok(meta) => {
-                if meta.name() == ATTRIBUTE_NAME {
+                let name = meta.path().get_ident().expect("Get ident").to_string();
+                if name == ATTRIBUTE_NAME {
                     match meta {
                         syn::Meta::List(meta_list) => {
                             return parse_attibute_args(&meta_list);

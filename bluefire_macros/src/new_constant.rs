@@ -44,7 +44,7 @@ fn parse_attibutes(attributes: proc_macro2::TokenStream) -> Config {
         let meta: syn::Meta = syn::parse2(attributes).expect("failed to parse attributes");
         match meta {
             syn::Meta::NameValue(value) => {
-                let name = value.ident.to_string();
+                let name = value.path.get_ident().expect("Get ident").to_string();
                 match name.as_ref() {
                     "format" => match value.lit {
                         syn::Lit::Str(ref lit_str) => {

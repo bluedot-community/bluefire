@@ -49,8 +49,8 @@ pub fn routes(stream: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let config = parse_params(stream);
     let path = as_cargo_absolute_path(&config.file_path);
     let input = std::fs::read_to_string(&path).expect(&format!("Read '{}' file", config.file_path));
-    let routes = bluefire_protogen::spec::Routes::from_str(&input)
-        .expect(&format!("Parse '{}' file", config.file_path));
+    let routes =
+        bluefire_protogen::spec::Routes::from_str(&input).expect(&format!("Parse {:?} file", path));
     let generator = bluefire_protogen::rust_generator::RustGenerator::new();
     let result = generator.generate_routes(&routes);
     result.parse().expect("Parse into TokenStream")
@@ -66,8 +66,8 @@ pub fn paths(stream: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let config = parse_params(stream);
     let path = as_cargo_absolute_path(&config.file_path);
     let input = std::fs::read_to_string(&path).expect(&format!("Read '{}' file", config.file_path));
-    let routes = bluefire_protogen::spec::Routes::from_str(&input)
-        .expect(&format!("Parse '{}' file", config.file_path));
+    let routes =
+        bluefire_protogen::spec::Routes::from_str(&input).expect(&format!("Parse {:?} file", path));
     let generator = bluefire_protogen::rust_generator::RustGenerator::new();
     let result = generator.generate_paths(&routes);
     result.parse().expect("Parse into TokenStream")
