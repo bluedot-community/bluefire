@@ -65,7 +65,7 @@ impl Id {
     pub fn new_random() -> Self {
         let mut data: [u8; ID_SIZE_IN_BYTES] = [0; ID_SIZE_IN_BYTES];
 
-        let timestamp = js_sys::Date::now() as u32;
+        let timestamp = js_sys::Date::now() as u64 as u32;
         byteorder::BigEndian::write_u32(&mut data[0..4], timestamp);
 
         let rand = (std::u64::MAX as f64 * js_sys::Math::random()) as u64;
