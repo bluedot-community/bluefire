@@ -48,6 +48,16 @@ pub mod element {
             }
         }
 
+        /// Sets focus on the element.
+        pub fn focus(&self) {
+            if let Some(element) = crate::web::get_element(&self.id) {
+                match element.dyn_into::<web_sys::HtmlInputElement>() {
+                    Ok(html_element) => { let _ = html_element.focus(); }
+                    Err(..) => web_warn!("bluefire: '{}' is not an HTML element", self.id),
+                }
+            }
+        }
+
         /// Appends given HTML at the end of the element.
         pub fn append(&self, html: &str) {
             if let Some(element) = crate::web::get_element(&self.id) {
@@ -93,7 +103,6 @@ pub mod element {
 pub mod input {
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
-    use web_sys::{Event, KeyboardEvent};
 
     /// Represents a view into an HTML `input` element.
     pub struct Input<'a> {
@@ -120,6 +129,25 @@ pub mod input {
             if let Some(element) = crate::web::get_element(&self.id) {
                 match element.dyn_into::<web_sys::HtmlInputElement>() {
                     Ok(input_element) => input_element.value(),
+                    Err(..) => {
+                        web_warn!("bluefire: '{}' is not an input", self.id);
+                        String::default()
+                    }
+                }
+            } else {
+                String::default()
+            }
+        }
+
+        /// Returns the value of the input and clears it.
+        pub fn take_value(&self) -> String {
+            if let Some(element) = crate::web::get_element(&self.id) {
+                match element.dyn_into::<web_sys::HtmlInputElement>() {
+                    Ok(input_element) => {
+                        let value = input_element.value();
+                        input_element.set_value("");
+                        value
+                    }
                     Err(..) => {
                         web_warn!("bluefire: '{}' is not an input", self.id);
                         String::default()
@@ -186,15 +214,10 @@ pub mod input {
             }
         }
 
-        /// Sets a callback to be executed when `enter` key is pressed and released.
-        pub fn on_enter(&self, callback: Box<dyn Fn()>) {
+        /// Sets a callback to be executed when the value of the input changes.
+        pub fn on_keyup(&self, callback: Box<dyn Fn()>) {
             if let Some(element) = crate::web::get_element(&self.id) {
-                let closure = Closure::wrap(Box::new(move |event: Event| {
-                    let keyboard_event = event.dyn_ref::<KeyboardEvent>().unwrap();
-                    if keyboard_event.key_code() == super::keycode::ENTER {
-                        callback();
-                    }
-                }) as Box<dyn Fn(Event)>);
+                let closure = Closure::wrap(callback);
                 let result = element
                     .add_event_listener_with_callback("keyup", closure.as_ref().unchecked_ref());
                 if let Err(err) = result {
