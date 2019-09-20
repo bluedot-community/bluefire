@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::context::Extension;
 
-use lettre::{SmtpClient, SmtpTransport, Transport};
+use lettre::{ClientSecurity, SmtpClient, SmtpTransport, Transport};
 use lettre_email::{EmailBuilder, Mailbox};
 
 // -------------------------------------------------------------------------------------------------
@@ -103,8 +103,16 @@ pub struct SmtpMailer {
 
 impl SmtpMailer {
     /// Constructs a new `SmtpMailer`.
-    pub fn new() -> Self {
-        let transport = SmtpClient::new_unencrypted_localhost()
+    pub fn new<A>(addr: A) -> Self where A: std::net::ToSocketAddrs {
+        let transport = SmtpClient::new(addr, ClientSecurity::None)
+            .expect("BlueFire: Construct SMTP client")
+            .transport();
+        Self { transport }
+    }
+
+    /// Constructs a new `SmtpMailer`.
+    pub fn new_local() -> Self {
+        let transport = SmtpClient::new(("127.0.0.1", 25), ClientSecurity::None)
             .expect("BlueFire: Construct SMTP client")
             .transport();
         Self { transport }
