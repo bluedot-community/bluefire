@@ -8,12 +8,12 @@ edition = "2018"
 proc-macro = true
 
 [dependencies]
-proc-macro2 = { version = "1.0" }
-syn = { "version" = "1.0", features = ["full"] }
-quote = { "version" = "1.0" }
+proc-macro2 = "1.0.4"
+syn = { "version" = "1.0.5", features = ["full"] }
+quote = "1.0.2"
 bluefire_protogen = { version = "0.1.0" }
 
 [dev-dependencies]
-serde = { "version" = "1.0" }
-serde_derive = { "version" = "1.0" }
-serde_urlencoded = { "version" = "0.6" }
+serde = "1.0.101"
+serde_derive = "1.0.101"
+serde_urlencoded = "0.6.1"

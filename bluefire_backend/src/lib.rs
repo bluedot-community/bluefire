@@ -38,3 +38,6 @@ pub mod email;
 
 #[cfg(feature = "scheduler")]
 pub mod scheduler;
+
+//#[cfg(feature = "background")]
+// XXX pub mod background;
