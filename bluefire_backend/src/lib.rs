@@ -41,3 +41,6 @@ pub mod scheduler;
 
 #[cfg(feature = "background")]
 pub mod background;
+
+#[cfg(feature = "fetch")]
+pub mod fetch;

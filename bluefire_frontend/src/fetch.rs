@@ -5,7 +5,7 @@
 
 use bluefire_twine::constants::*;
 
-/// Fetched a remote resource.
+/// Fetches a remote resource.
 pub fn fetch(host: &str, message: &bluefire_twine::message::Message) -> js_sys::Promise {
     let mut request_init = web_sys::RequestInit::new();
     request_init.method(message.method());
