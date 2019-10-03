@@ -52,7 +52,9 @@ pub mod element {
         pub fn focus(&self) {
             if let Some(element) = crate::web::get_element(&self.id) {
                 match element.dyn_into::<web_sys::HtmlInputElement>() {
-                    Ok(html_element) => { let _ = html_element.focus(); }
+                    Ok(html_element) => {
+                        let _ = html_element.focus();
+                    }
                     Err(..) => web_warn!("bluefire: '{}' is not an HTML element", self.id),
                 }
             }

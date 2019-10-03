@@ -103,7 +103,10 @@ pub struct SmtpMailer {
 
 impl SmtpMailer {
     /// Constructs a new `SmtpMailer`.
-    pub fn new<A>(addr: A) -> Self where A: std::net::ToSocketAddrs {
+    pub fn new<A>(addr: A) -> Self
+    where
+        A: std::net::ToSocketAddrs,
+    {
         let transport = SmtpClient::new(addr, ClientSecurity::None)
             .expect("BlueFire: Construct SMTP client")
             .transport();

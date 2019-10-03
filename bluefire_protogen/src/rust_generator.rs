@@ -201,7 +201,9 @@ impl GeneratorCallback {
 
     /// Renders the route template with the give route.
     pub fn route(&self, route: &spec::Route, label_prefix: &Option<String>) -> String {
-        RustRouteTemplate::new(route, label_prefix, self.clone()).render().expect("Render route template")
+        RustRouteTemplate::new(route, label_prefix, self.clone())
+            .render()
+            .expect("Render route template")
     }
 
     /// Searches for a `TypeDef` with given name.
