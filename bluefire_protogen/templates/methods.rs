@@ -179,6 +179,14 @@
             )}
         {% endfor %}
 
+        pub fn from_json_string(json_str: &str) -> Result<Self, serde_json::Error> {
+            serde_json::from_str(json_str)
+        }
+
+        pub fn to_json_string(&self) -> Result<String, serde_json::Error> {
+            serde_json::to_string(self)
+        }
+
         fn get_code(&self) -> http::StatusCode {
             match self {
                 {{ response_name }}::Success(yeeld) => yeeld.get_code(),
