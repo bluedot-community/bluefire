@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of
 // the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-//! Scheduling tasks to be executed at periodically at fixed times or after timeouts.
+//! Scheduling tasks to be executed periodically at fixed times or after timeouts.
 
 use std::sync::{Arc, Mutex};
 
