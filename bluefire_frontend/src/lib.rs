@@ -7,6 +7,7 @@
 #![feature(proc_macro_hygiene)]
 #![feature(unboxed_closures)]
 #![feature(fn_traits)]
+#![feature(option_flattening)]
 
 #[cfg(feature = "web")]
 pub use web_sys;

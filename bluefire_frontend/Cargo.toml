@@ -26,7 +26,7 @@ version = "0.4.9"
 optional = true
 
 [dependencies.wasm-bindgen]
-version = "0.2.47"
+version = "0.2.51"
 optional = true
 features = ["serde-serialize"]
 
@@ -39,8 +39,9 @@ version = "0.3.6"
 optional = true
 features = [
     "Window", "Document", "HtmlDocument", "Location", "History",
-    "Node", "Element", "EventListener", "Event", "KeyboardEvent", "EventTarget", "DomTokenList",
-    "HtmlElement", "HtmlInputElement", "HtmlSelectElement", "HtmlTextAreaElement",
+    "Node", "DataTransfer", "DomRect", "DomTokenList", "HtmlCollection",
+    "Element", "HtmlElement", "HtmlInputElement", "HtmlSelectElement", "HtmlTextAreaElement",
+    "EventListener", "Event", "DragEvent", "KeyboardEvent", "MouseEvent", "EventTarget",
     "Request", "RequestInit", "Response", "Headers",
     "console"
 ]
