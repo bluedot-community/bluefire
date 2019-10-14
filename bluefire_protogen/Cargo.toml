@@ -9,8 +9,8 @@ publish = false
 name = "protogen"
 path = "bin/protogen.rs"
 
-[features]
-fmt = ["rustfmt-nightly"]
+#[features]
+#fmt = ["rustfmt-nightly"]
 
 [dependencies]
 askama = "0.8.0"
@@ -19,7 +19,7 @@ http = "0.1.18"
 serde = "1.0.101"
 serde_derive = "1.0.101"
 serde_yaml = "0.8.9"
-rustfmt-nightly = { version = "1.4", optional = true }
+#rustfmt-nightly = { version = "1.4", optional = true }
 bluefire_twine = { version = "0.1" }
 
 
