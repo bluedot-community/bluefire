@@ -27,15 +27,65 @@ macro_rules! on {
     };
 }
 
+/// Traits for common functionality among the elements.
+pub mod traits {
+    /// Provides access to the underlying `web_sys::HtmlElement`.
+    pub trait RawElement {
+        /// Returns the underlying `web_sys::HtmlElement`.
+        fn raw(&self) -> Option<&web_sys::HtmlElement>;
+    }
+
+    /// Provides ability to check if the element exists and has desired type.
+    pub trait ElementExistance: RawElement {
+        /// Checks if the HTML element exists.
+        fn exists(&self) -> bool {
+            self.raw().is_some()
+        }
+    }
+
+    /// Provides ability to change the elements visibility.
+    pub trait ElementVisibility: RawElement {
+        /// Adds property "display: none" to the elements style.
+        fn hide(&self) {
+            if let Some(element) = self.raw() {
+                let _ = element.style().set_property("display", "none");
+            }
+        }
+
+        /// Removes property "display" from the elements style.
+        fn unhide(&self) {
+            if let Some(element) = self.raw() {
+                let _ = element.style().remove_property("display");
+            }
+        }
+    }
+
+    /// Prelude for traits.
+    pub mod prelude {
+        pub use super::{ElementExistance, ElementVisibility};
+    }
+}
+
 /// This module contains functionality related to a generic HTML element.
 pub mod element {
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
 
+    use super::traits::{RawElement, prelude::*};
+
     /// Represents a view into a generic HTML element.
     pub struct Element {
-        element: Option<web_sys::Element>,
+        element: Option<web_sys::HtmlElement>,
     }
+
+    impl RawElement for Element {
+        fn raw(&self) -> Option<&web_sys::HtmlElement> {
+            self.element.as_ref()
+        }
+    }
+
+    impl ElementVisibility for Element {}
+    impl ElementExistance for Element {}
 
     impl Element {
         /// Check if the two elements represent the same HTML node.
@@ -51,25 +101,54 @@ pub mod element {
             }
         }
 
-        /// Constructs a new `Element`.
-        /// Prints a warning on the console if the element does not exist.
-        pub fn get(id: &str) -> Self {
-            let element = crate::web::document().get_element_by_id(id);
-            if element.is_none() {
-                web_warn!("bluefire: element '{}' does not exist", id);
-            }
+        /// Constructs a new `Element` with tag name.
+        pub fn new(name: &str, class: &str, text: Option<&str>) -> Self {
+            let element = if let Ok(element) = crate::web::document().create_element(name) {
+                let html_element = element.dyn_into::<web_sys::HtmlElement>().ok();
+                if let Some(ref html_element) = html_element {
+                    html_element.set_class_name(class);
+                    html_element.set_text_content(text);
+                }
+                html_element
+            } else {
+                web_error!("bluefire: failed to create a new element");
+                None
+            };
             Self { element }
         }
 
-        /// Constructs a new `Element`.
+        /// Constructs a new `Element` for and existing element with the given ID.
+        /// Prints a warning on the console if the element does not exist.
+        pub fn get(id: &str) -> Self {
+            let element = if let Some(element) = crate::web::document().get_element_by_id(id) {
+                match element.dyn_into::<web_sys::HtmlElement>() {
+                    Ok(html_element) => Some(html_element),
+                    Err(..) => {
+                        web_warn!("bluefire: '{}' is not an html element", id);
+                        None
+                    }
+                }
+            } else {
+                web_error!("bluefire: element '{}' does not exist", id);
+                None
+            };
+            Self { element }
+
+        }
+
+        /// Constructs a new `Element` for and existing element with the given ID.
         pub fn get_optional(id: &str) -> Self {
-            Self { element: crate::web::document().get_element_by_id(id) }
+            let element = crate::web::document()
+                .get_element_by_id(id)
+                .map(|element| element.dyn_into::<web_sys::HtmlElement>().ok())
+                .flatten();
+            Self { element }
         }
 
         /// Constructs a new `Element` from an event target.
         pub fn from_event(event: &web_sys::Event) -> Self {
             let element = if let Some(target) = event.target() {
-                target.dyn_ref::<web_sys::Element>().map(|e| e.clone())
+                target.dyn_ref::<web_sys::HtmlElement>().map(|e| e.clone())
             } else {
                 web_warn!("bluefire: event target does not exist");
                 None
@@ -77,15 +156,14 @@ pub mod element {
             Self { element }
         }
 
-        /// Checks if the HTML element exists.
-        pub fn exists(&self) -> bool {
-            self.element.is_some()
-        }
-
         /// Returns a parent element.
         pub fn parent(&self) -> Element {
             if let Some(ref element) = self.element {
-                Element { element: element.parent_element() }
+                if let Some(parent) = element.parent_element() {
+                    Element { element: parent.dyn_into::<web_sys::HtmlElement>().ok() }
+                } else {
+                    Element { element: None }
+                }
             } else {
                 Element { element: None }
             }
@@ -104,6 +182,13 @@ pub mod element {
                 ids
             } else {
                 Vec::new()
+            }
+        }
+
+        /// Sets the class string.
+        pub fn set_class(&self, class: &str) {
+            if let Some(ref element) = self.element {
+                element.set_class_name(class);
             }
         }
 
@@ -131,6 +216,13 @@ pub mod element {
             }
         }
 
+        /// Sets the outer-HTML of an element. The text will be interpreted as HTML.
+        pub fn reset_html_2(&self, html: &str) {
+            if let Some(ref element) = self.element {
+                element.set_outer_html(html);
+            }
+        }
+
         /// Sets focus on the element.
         pub fn focus(&self) {
             if let Some(ref element) = self.element {
@@ -151,6 +243,7 @@ pub mod element {
                 }
             }
         }
+
         /// Inserts given HTML before the first child of the elemennt.
         pub fn insert_front(&self, html: &str) {
             if let Some(ref element) = self.element {
@@ -267,10 +360,21 @@ pub mod input {
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
 
+    use super::traits::{RawElement, prelude::*};
+
     /// Represents a view into an HTML `input` element.
     pub struct Input {
         element: Option<web_sys::HtmlInputElement>,
     }
+
+    impl RawElement for Input {
+        fn raw(&self) -> Option<&web_sys::HtmlElement> {
+            self.element.as_ref().map(|e| &**e)
+        }
+    }
+
+    impl ElementVisibility for Input {}
+    impl ElementExistance for Input {}
 
     impl Input {
         /// Constructs a new `Input`.
@@ -298,11 +402,6 @@ pub mod input {
                 .map(|element| element.dyn_into::<web_sys::HtmlInputElement>().ok())
                 .flatten();
             Self { element }
-        }
-
-        /// Checks if the HTML element exists and is an `input` element.
-        pub fn exists(&self) -> bool {
-            self.element.is_some()
         }
 
         /// Returns the value of the input.
@@ -348,6 +447,20 @@ pub mod input {
             }
         }
 
+        /// Sets the datalist element ID.
+        pub fn set_datalist(&self, id: &str) {
+            if let Some(ref element) = self.element {
+                let _ = element.set_attribute("list", id);
+            }
+        }
+
+        /// Sets focus on the element.
+        pub fn focus(&self) {
+            if let Some(ref element) = self.element {
+                let _ = element.focus();
+            }
+        }
+
         /// Sets a callback to be executed when the value of the input changes.
         pub fn on_change(&self, callback: Box<dyn Fn(web_sys::Event)>) {
             on!(self, "change", callback);
@@ -365,10 +478,21 @@ pub mod input {
 pub mod select {
     use wasm_bindgen::JsCast;
 
+    use super::traits::{RawElement, prelude::*};
+
     /// Represents a view into an HTML `select` element.
     pub struct Select {
         element: Option<web_sys::HtmlSelectElement>,
     }
+
+    impl RawElement for Select {
+        fn raw(&self) -> Option<&web_sys::HtmlElement> {
+            self.element.as_ref().map(|e| &**e)
+        }
+    }
+
+    impl ElementVisibility for Select {}
+    impl ElementExistance for Select {}
 
     impl Select {
         /// Constructs a new `Select`.
@@ -398,11 +522,6 @@ pub mod select {
             Self { element }
         }
 
-        /// Checks if the HTML element exists and is a `select` element.
-        pub fn exists(&self) -> bool {
-            self.element.is_some()
-        }
-
         /// Returns the value of the selected element.
         pub fn get_value(&self) -> String {
             if let Some(ref element) = self.element {
@@ -417,6 +536,17 @@ pub mod select {
 #[cfg(feature = "elements_textarea")]
 mod textarea {
     use wasm_bindgen::JsCast;
+
+    use super::traits::{RawElement, prelude::*};
+
+    impl RawElement for TextArea {
+        fn raw(&self) -> Option<&web_sys::HtmlElement> {
+            self.element.as_ref().map(|e| &**e)
+        }
+    }
+
+    impl ElementVisibility for TextArea {}
+    impl ElementExistance for TextArea {}
 
     /// Represents a view into an HTML `textarea` element.
     pub struct TextArea {
@@ -479,6 +609,8 @@ pub use self::textarea::TextArea;
 
 /// Prelude for `elements` module.
 pub mod prelude {
+    pub use super::traits::prelude::*;
+
     pub use super::element::Element;
 
     #[cfg(feature = "elements_input")]

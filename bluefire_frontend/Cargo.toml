@@ -39,7 +39,7 @@ version = "0.3.6"
 optional = true
 features = [
     "Window", "Document", "HtmlDocument", "Location", "History",
-    "Node", "DataTransfer", "DomRect", "DomTokenList", "HtmlCollection",
+    "Node", "DataTransfer", "DomRect", "DomTokenList", "HtmlCollection", "CssStyleDeclaration",
     "Element", "HtmlElement", "HtmlInputElement", "HtmlSelectElement", "HtmlTextAreaElement",
     "EventListener", "Event", "DragEvent", "KeyboardEvent", "MouseEvent", "EventTarget",
     "Request", "RequestInit", "Response", "Headers",
