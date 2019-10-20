@@ -9,10 +9,13 @@ publish = false
 default = []
 
 elements = ["maud", "wasm-bindgen", "web"]
-elements_all = ["elements", "elements_input", "elements_select", "elements_textarea"]
+elements_all = [
+    "elements", "elements_input", "elements_select", "elements_textarea", "elements_data_list"
+]
 elements_input = ["elements"]
 elements_select = ["elements"]
 elements_textarea = ["elements"]
+elements_data_list = ["elements"]
 
 authentication = ["cookies"]
 cookies = ["chrono", "web-sys", "wasm-bindgen", "web"]
@@ -40,7 +43,8 @@ optional = true
 features = [
     "Window", "Document", "HtmlDocument", "Location", "History",
     "Node", "DataTransfer", "DomRect", "DomTokenList", "HtmlCollection", "CssStyleDeclaration",
-    "Element", "HtmlElement", "HtmlInputElement", "HtmlSelectElement", "HtmlTextAreaElement",
+    "Element", "HtmlElement", "HtmlDataListElement",
+    "HtmlInputElement", "HtmlSelectElement", "HtmlTextAreaElement",
     "EventListener", "Event", "DragEvent", "KeyboardEvent", "MouseEvent", "EventTarget",
     "Request", "RequestInit", "Response", "Headers",
     "console"

@@ -74,6 +74,7 @@ pub mod element {
     use super::traits::{RawElement, prelude::*};
 
     /// Represents a view into a generic HTML element.
+    #[derive(Clone)]
     pub struct Element {
         element: Option<web_sys::HtmlElement>,
     }
@@ -145,6 +146,18 @@ pub mod element {
             Self { element }
         }
 
+        /// Construct a new `Element` from `web_sys::Element`.
+        pub fn from_element(element: web_sys::Element) -> Self {
+            let id = element.id();
+            match element.dyn_into::<web_sys::HtmlElement>() {
+                Ok(html_element) => Self { element: Some(html_element) },
+                Err(..) => {
+                    web_warn!("bluefire: '{}' is not an html element", id);
+                    Self { element: None }
+                }
+            }
+        }
+
         /// Constructs a new `Element` from an event target.
         pub fn from_event(event: &web_sys::Event) -> Self {
             let element = if let Some(target) = event.target() {
@@ -169,6 +182,21 @@ pub mod element {
             }
         }
 
+        /// Returns a vector of children.
+        pub fn get_children_elements(&self) -> Vec<Element> {
+            if let Some(ref element) = self.element {
+                let children = element.children();
+                let mut elements = Vec::with_capacity(children.length() as usize);
+                for i in 0..children.length() {
+                    if let Some(element) = children.item(i) {
+                        elements.push(Element::from_element(element));
+                    }
+                }
+                elements
+            } else {
+                Vec::new()
+            }
+        }
         /// Returns a vector of children IDs.
         pub fn get_children_ids(&self) -> Vec<String> {
             if let Some(ref element) = self.element {
@@ -200,6 +228,15 @@ pub mod element {
         /// Returns the bounding client rectangle.
         pub fn get_bounding_client_rect(&self) -> Option<web_sys::DomRect> {
             self.element.as_ref().map(|element| element.get_bounding_client_rect())
+        }
+
+        /// Returns the text content of an element.
+        pub fn get_text(&self) ->  Option<String> {
+            if let Some(ref element) = self.element {
+                element.text_content()
+            } else {
+                None
+            }
         }
 
         /// Sets the text content of an element. The text will not be interpreted as HTML.
@@ -363,6 +400,7 @@ pub mod input {
     use super::traits::{RawElement, prelude::*};
 
     /// Represents a view into an HTML `input` element.
+    #[derive(Clone)]
     pub struct Input {
         element: Option<web_sys::HtmlInputElement>,
     }
@@ -401,6 +439,29 @@ pub mod input {
                 .get_element_by_id(id)
                 .map(|element| element.dyn_into::<web_sys::HtmlInputElement>().ok())
                 .flatten();
+            Self { element }
+        }
+
+        /// Construct a new `Input` from `web_sys::Element`.
+        pub fn from_element(element: web_sys::Element) -> Self {
+            let id = element.id();
+            match element.dyn_into::<web_sys::HtmlInputElement>() {
+                Ok(input_element) => Self { element: Some(input_element) },
+                Err(..) => {
+                    web_warn!("bluefire: '{}' is not an html element", id);
+                    Self { element: None }
+                }
+            }
+        }
+
+        /// Constructs a new `Input` from an event target.
+        pub fn from_event(event: &web_sys::Event) -> Self {
+            let element = if let Some(target) = event.target() {
+                target.dyn_ref::<web_sys::HtmlInputElement>().map(|e| e.clone())
+            } else {
+                web_warn!("bluefire: event target does not exist");
+                None
+            };
             Self { element }
         }
 
@@ -481,6 +542,7 @@ pub mod select {
     use super::traits::{RawElement, prelude::*};
 
     /// Represents a view into an HTML `select` element.
+    #[derive(Clone)]
     pub struct Select {
         element: Option<web_sys::HtmlSelectElement>,
     }
@@ -539,6 +601,12 @@ mod textarea {
 
     use super::traits::{RawElement, prelude::*};
 
+    /// Represents a view into an HTML `textarea` element.
+    #[derive(Clone)]
+    pub struct TextArea {
+        element: Option<web_sys::HtmlTextAreaElement>,
+    }
+
     impl RawElement for TextArea {
         fn raw(&self) -> Option<&web_sys::HtmlElement> {
             self.element.as_ref().map(|e| &**e)
@@ -548,18 +616,13 @@ mod textarea {
     impl ElementVisibility for TextArea {}
     impl ElementExistance for TextArea {}
 
-    /// Represents a view into an HTML `textarea` element.
-    pub struct TextArea {
-        element: Option<web_sys::HtmlTextAreaElement>,
-    }
-
     impl TextArea {
-        /// Constructs a new `Select`.
+        /// Constructs a new `TextArea`.
         /// Prints a warning on the console if the element does not exist.
         pub fn get(id: &str) -> Self {
             let element = if let Some(element) = crate::web::document().get_element_by_id(id) {
                 match element.dyn_into::<web_sys::HtmlTextAreaElement>() {
-                    Ok(select_element) => Some(select_element),
+                    Ok(textarea_element) => Some(textarea_element),
                     Err(..) => {
                         web_warn!("bluefire: '{}' is not a text area", id);
                         None
@@ -599,6 +662,67 @@ mod textarea {
     }
 }
 
+#[cfg(feature = "elements_data_list")]
+mod data_list {
+    use wasm_bindgen::JsCast;
+
+    use super::traits::{RawElement, prelude::*};
+
+    /// Represents a view into an HTML `datalist` element.
+    #[derive(Clone)]
+    pub struct DataList {
+        element: Option<web_sys::HtmlDataListElement>,
+    }
+
+    impl RawElement for DataList {
+        fn raw(&self) -> Option<&web_sys::HtmlElement> {
+            self.element.as_ref().map(|e| &**e)
+        }
+    }
+
+    impl ElementVisibility for DataList {}
+    impl ElementExistance for DataList {}
+
+    impl DataList {
+        /// Constructs a new `DataList`.
+        /// Prints a warning on the console if the element does not exist.
+        pub fn get(id: &str) -> Self {
+            let element = if let Some(element) = crate::web::document().get_element_by_id(id) {
+                match element.dyn_into::<web_sys::HtmlDataListElement>() {
+                    Ok(datalist_element) => Some(datalist_element),
+                    Err(..) => {
+                        web_warn!("bluefire: '{}' is not a datalist", id);
+                        None
+                    }
+                }
+            } else {
+                web_error!("bluefire: element '{}' does not exist", id);
+                None
+            };
+            Self { element }
+        }
+
+        /// Constructs a new `TextArea`.
+        pub fn get_optional(id: &str) -> Self {
+            let element = crate::web::document()
+                .get_element_by_id(id)
+                .map(|element| element.dyn_into::<web_sys::HtmlDataListElement>().ok())
+                .flatten();
+            Self { element }
+        }
+
+        /// Adds a new option.
+        pub fn push(&self, option: &str) {
+            if let Some(ref element) = self.element {
+                let html = format!("<option>{}</option>", option);
+                if let Err(err) = element.insert_adjacent_html("beforeend", &html) {
+                    web_error!("bluefire: insert option: {:?}", err);
+                }
+            }
+        }
+    }
+}
+
 pub use self::element::Element;
 
 #[cfg(feature = "elements_input")]
@@ -621,6 +745,9 @@ pub mod prelude {
 
     #[cfg(feature = "elements_textarea")]
     pub use super::textarea::TextArea;
+
+    #[cfg(feature = "elements_data_list")]
+    pub use super::data_list::DataList;
 
     pub use web_sys::{DragEvent, Event, KeyboardEvent, MouseEvent};
 }
