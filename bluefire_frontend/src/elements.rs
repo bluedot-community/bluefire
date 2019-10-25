@@ -527,9 +527,16 @@ pub mod input {
             on!(self, "change", callback);
         }
 
-        /// Sets a callback to be executed when the value of the input changes.
+        /// Sets a callback to be executed when a key is released.
         pub fn on_keyup(&self, callback: Box<dyn Fn(web_sys::KeyboardEvent)>) {
             on!(self, "keyup", callback);
+        }
+
+        /// Sets a callback to be executed when the `enter` key is released.
+        pub fn on_enter(&self, callback: Box<dyn Fn(web_sys::KeyboardEvent)>) {
+            self.on_keyup(Box::new(move |event: web_sys::KeyboardEvent| {
+                if event.key_code() == 13 { callback(event) }
+            }));
         }
     }
 }
