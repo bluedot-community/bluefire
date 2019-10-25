@@ -519,7 +519,7 @@ pub fn find_reason(name: &utils::Name, reasons: &Vec<Reason>) -> Reason {
 
 /// Transforms routes representation from tree-like structure to a vector of vectors of path
 /// segments.
-pub fn routes_to_paths(routes: &Vec<Route>) -> Vec<Path> {
+pub fn routes_to_paths(index_name: Option<utils::Name>, routes: &Vec<Route>) -> Vec<Path> {
     fn iter_segments(routes: &Vec<Route>, paths: &mut Vec<Path>, segments: &mut Vec<Segment>) {
         for route in routes.iter() {
             segments.push(route.segment.clone());
@@ -533,6 +533,11 @@ pub fn routes_to_paths(routes: &Vec<Route>) -> Vec<Path> {
 
     let mut paths = Vec::new();
     let mut segments = Vec::new();
+
+    if let Some(name) = &index_name {
+        paths.push(Path { name: name.clone(), segments: segments.clone() });
+    }
+
     iter_segments(&routes, &mut paths, &mut segments);
     paths
 }

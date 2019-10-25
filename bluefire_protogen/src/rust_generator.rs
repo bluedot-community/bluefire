@@ -235,7 +235,7 @@ impl RustGenerator {
 
     /// Generate API.
     pub fn generate_api(self, api: &spec::Api) -> String {
-        let paths = spec::routes_to_paths(&api.routes);
+        let paths = spec::routes_to_paths(None, &api.routes);
         let imports_template = RustImportsTemplate::new();
         let types_template = RustTypesTemplate::new(&api);
         let paths_template = RustPathsTemplate::new(&paths);
@@ -257,7 +257,7 @@ impl RustGenerator {
 
     /// Generate path definitions.
     pub fn generate_paths(self, routes: &spec::Routes) -> String {
-        let paths = spec::routes_to_paths(&routes.routes);
+        let paths = spec::routes_to_paths(routes.name.clone(), &routes.routes);
         let imports_template = RustImportsTemplate::new();
         let paths_template = RustPathsTemplate::new(&paths);
 
