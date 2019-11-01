@@ -1,0 +1,12 @@
+[package]
+name = "bluefire_static_files_core"
+version = "0.1.0"
+authors = ["Wojciech Kluczka <wojciech.kluczka@gmail.com>"]
+edition = "2018"
+publish = false
+
+[dependencies]
+serde = "1.0.101"
+serde_derive = "1.0.101"
+serde_yaml = "0.8.9"
+

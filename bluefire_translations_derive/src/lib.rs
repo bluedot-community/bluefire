@@ -179,9 +179,9 @@ fn parse_attibute_args(args: &syn::MetaList) -> Config {
                         _ => panic!("Unknown argument '{}'", a),
                     }
                 }
-                _ => panic!("All arguments are expectedt to be name-value"),
+                _ => panic!("All arguments are expected to be name-value"),
             },
-            _ => panic!("'translations' attribute is expected to have nested arguments"),
+            _ => panic!("the attribute is expected to have nested arguments"),
         }
     }
     config

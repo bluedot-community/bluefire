@@ -5,6 +5,8 @@
 
 use askama::Template;
 
+use bluefire_build::cargo;
+
 use crate::{spec, utils};
 
 // -------------------------------------------------------------------------------------------------
@@ -278,7 +280,7 @@ impl RustGenerator {
 
     /// Generate API from given input file and save to the given output file.
     pub fn generate_api_file(self, input: &str, output: &str) {
-        let content = Self::read_manifest_path(input);
+        let content = cargo::read_manifest_path(input);
         let api = match spec::Api::from_str(&content) {
             Ok(api) => api,
             Err(err) => panic!("Parse file ({}): {}", input, err),
@@ -290,7 +292,7 @@ impl RustGenerator {
 
     /// Generate paths from given input file and save to the given output file.
     pub fn generate_paths_file(self, input: &str, output: &str) {
-        let content = Self::read_manifest_path(input);
+        let content = cargo::read_manifest_path(input);
         let paths = match spec::Routes::from_str(&content) {
             Ok(api) => api,
             Err(err) => panic!("Parse file ({}): {}", input, err),
@@ -302,7 +304,7 @@ impl RustGenerator {
 
     /// Generate routes from given input file and save to the given output file.
     pub fn generate_routes_file(self, input: &str, output: &str) {
-        let content = Self::read_manifest_path(input);
+        let content = cargo::read_manifest_path(input);
         let routes = match spec::Routes::from_str(&content) {
             Ok(api) => api,
             Err(err) => panic!("Parse file ({}): {}", input, err),
@@ -314,34 +316,17 @@ impl RustGenerator {
 }
 
 impl RustGenerator {
-    /// Reads a file from the cargo manifest path.
-    pub fn read_manifest_path(input: &str) -> String {
-        let input_dir =
-            std::env::var("CARGO_MANIFEST_DIR").expect("Cargo manifest directory not provided");
-
-        let mut input_path = std::path::PathBuf::new();
-        input_path.push(&input_dir);
-        input_path.push(input);
-
-        std::fs::read_to_string(input_path.clone()).expect(&format!("Read file: {:?}", input_path))
-    }
-
     /// Writes to a file in output directory.
     pub fn write_output_file(output: &str, content: &str) {
-        use std::io::Write;
-
-        let output_dir = std::env::var("OUT_DIR").expect("Read OUT_DIR variable");
-
-        let mut output_path = std::path::PathBuf::new();
-        output_path.push(&output_dir);
-        output_path.push(output);
-
-        let mut file =
-            std::fs::File::create(&output_path).expect(&format!("Create file: {:?}", &output_path));
-        file.write_all(content.as_bytes()).expect(&format!("Write to file: {:?}", &output_path));
+        #[cfg(not(feature = "fmt"))]
+        {
+            cargo::write_out_file(output, content);
+        }
 
         #[cfg(feature = "fmt")]
         {
+            let output_path = cargo::write_out_file(output, content);
+
             let out = &mut &mut std::io::stdout();
             let config = rustfmt_nightly::Config::default();
             let mut session = rustfmt_nightly::Session::new(config, Some(out));

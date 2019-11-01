@@ -35,6 +35,10 @@
                 serde_urlencoded::to_string(self)
             }
         {% else %}
+            pub fn from_json_slice(json_slice: &[u8]) -> Result<Self, serde_json::Error> {
+                serde_json::from_slice(json_slice)
+            }
+
             pub fn from_json_string(json_str: &str) -> Result<Self, serde_json::Error> {
                 serde_json::from_str(json_str)
             }
@@ -95,18 +99,18 @@
         {% endfor %}
     }
 
-    impl std::convert::TryFrom<http::Request<String>> for {{ request_name }} {
+    impl std::convert::TryFrom<bluefire_backend::Request> for {{ request_name }} {
         {% if method.request.method == spec::HttpMethod::Get %}
             type Error = serde::de::value::Error;
         {% else %}
             type Error = serde_json::error::Error;
         {% endif %}
 
-        fn try_from(request: http::Request<String>) -> Result<{{ request_name }}, Self::Error> {
+        fn try_from(request: bluefire_backend::Request) -> Result<{{ request_name }}, Self::Error> {
             {% if method.request.method == spec::HttpMethod::Get %}
                 Self::from_query_string(&request.uri().query().unwrap_or(""))
             {% else %}
-                Self::from_json_string(&request.body())
+                Self::from_json_slice(request.body().as_slice())
             {% endif %}
         }
      }
@@ -183,6 +187,10 @@
             serde_json::from_str(json_str)
         }
 
+        pub fn from_json_slice(json_slice: &[u8]) -> Result<Self, serde_json::Error> {
+            serde_json::from_slice(json_slice)
+        }
+
         pub fn to_json_string(&self) -> Result<String, serde_json::Error> {
             serde_json::to_string(self)
         }
@@ -200,11 +208,11 @@
         }
     }
 
-    impl From<{{ response_name }}> for http::Response<String> {
-        fn from(response: {{ response_name }}) -> http::Response<String> {
+    impl From<{{ response_name }}> for bluefire_backend::Response {
+        fn from(response: {{ response_name }}) -> bluefire_backend::Response {
             http::response::Builder::new()
                 .status(response.get_code())
-                .body(serde_json::to_string(&response).expect("Serialize response to JSON"))
+                .body(serde_json::to_string(&response).expect("Serialize response to JSON").into_bytes())
                 .expect("Build response")
         }
     }

@@ -39,6 +39,9 @@ pub mod email;
 #[cfg(feature = "scheduler")]
 pub mod scheduler;
 
+#[cfg(feature = "static_files")]
+pub mod static_files;
+
 #[cfg(feature = "background")]
 pub mod background;
 

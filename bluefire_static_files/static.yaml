@@ -1,0 +1,19 @@
+source_dir: ../resources/static
+
+sources:
+
+- input_base_name: theme-gray
+  output_base_name: theme-gray
+  type: scss
+  field_name: theme_gray_css
+
+- input_base_name: theme-steelblue
+  output_base_name: theme-steelblue
+  type: scss
+  field_name: theme_steelblue_css
+
+- input_base_name: theme-vermilion
+  output_base_name: theme-vermilion
+  type: scss
+  field_name: theme_vermilion_css
+

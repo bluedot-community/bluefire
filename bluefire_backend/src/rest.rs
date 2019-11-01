@@ -48,7 +48,7 @@ pub trait SimpleRestHandler: Handler {
     fn make_method_not_allowed_response(&self, _request: &Request) -> Response {
         http::response::Builder::new()
             .status(http::StatusCode::METHOD_NOT_ALLOWED)
-            .body(String::new())
+            .body(Vec::new())
             .expect("Failed to build not allowed method response body content.")
     }
 
@@ -60,7 +60,7 @@ pub trait SimpleRestHandler: Handler {
             .header(http::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
             .header(http::header::ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, PATCH, DELETE")
             .header(http::header::ACCESS_CONTROL_ALLOW_HEADERS, constants::BLUEFIRE_TOKEN_HEADER)
-            .body(String::new())
+            .body(Vec::new())
             .expect("Build OPTIONS response body")
     }
 
@@ -149,7 +149,7 @@ impl From<DefaultResponse> for Response {
     fn from(_: DefaultResponse) -> Response {
         http::response::Builder::new()
             .status(http::StatusCode::METHOD_NOT_ALLOWED)
-            .body(String::new())
+            .body(Vec::new())
             .expect("Failed to build not allowed method response body content.")
     }
 }
@@ -214,7 +214,7 @@ pub trait TypedRestHandler: Handler {
             .status(http::StatusCode::OK)
             .header(http::header::ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, PATCH, DELETE")
             .header(http::header::ACCESS_CONTROL_ALLOW_HEADERS, constants::BLUEFIRE_TOKEN_HEADER)
-            .body(String::new())
+            .body(Vec::new())
             .expect("Build OPTIONS response body")
     }
 

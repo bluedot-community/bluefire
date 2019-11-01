@@ -1,0 +1,15 @@
+[package]
+name = "bluefire_static_files"
+version = "0.1.0"
+authors = ["Wojciech Kluczka <wojciech.kluczka@gmail.com>"]
+edition = "2018"
+publish = false
+build = "build.rs"
+
+[dependencies]
+bluefire_backend = { version = "0.1.0", features=["static_files"] }
+bluefire_static_files_macros = "0.1.0"
+
+[build-dependencies]
+bluefire_build = "0.1.0"
+

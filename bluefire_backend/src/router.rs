@@ -16,13 +16,21 @@ mod utils {
     use super::Request;
 
     pub fn extract_host_and_path(request: &Request) -> (Option<String>, String) {
+        fn trimmed(host: &str) -> String {
+            if let Some(pos) = host.find(":") {
+                host[0..pos].to_string()
+            } else {
+                host.to_string()
+            }
+        }
+
         let uri = request.uri();
         let path = uri.path().to_string();
         let host_name = {
             if let Some(host_name) = uri.host() {
-                Some(host_name.to_string())
+                Some(trimmed(host_name))
             } else if let Some(host_name) = request.headers().get("Host") {
-                host_name.to_str().ok().map(|name| name.to_string())
+                host_name.to_str().ok().map(trimmed)
             } else {
                 None
             }
@@ -273,10 +281,15 @@ impl Route {
         self
     }
 
-    /// Adds sub-routes.
+    /// Sets sub-routes.
     pub fn with_routes(mut self, routes: Vec<Route>) -> Route {
         self.routes = routes;
         self
+    }
+
+    /// Adds a sub-route.
+    pub fn add_route(&mut self, route: Route) {
+        self.routes.push(route);
     }
 
     /// Sets the label for the route. Label should be a unique identifier of the route. It can be

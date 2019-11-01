@@ -5,6 +5,11 @@ members = [
         "bluefire_translations",
         "bluefire_translations_derive",
 
+        "bluefire_static_files_core",
+        "bluefire_static_files_macros",
+        "bluefire_static_files",
+        "bluefire_build",
+
         "bluefire_twine",
         "bluefire_macros",
 
@@ -20,6 +25,11 @@ members = [
 bluefire_languages = { path = 'bluefire_languages' }
 bluefire_translations = { path = 'bluefire_translations' }
 bluefire_translations_derive = { path = 'bluefire_translations_derive' }
+
+bluefire_static_files_core = { path = 'bluefire_static_files_core' }
+bluefire_static_files_macros = { path = 'bluefire_static_files_macros' }
+bluefire_static_files = { path = 'bluefire_static_files' }
+bluefire_build = { path = 'bluefire_build' }
 
 bluefire_twine = { path = 'bluefire_twine' }
 bluefire_macros = { path = 'bluefire_macros' }

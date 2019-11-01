@@ -72,7 +72,7 @@ fn test_routing_for_index() {
     let mut env = env::Env::new();
     let response = env.exec("/");
     assert_eq!(response.status(), http::StatusCode::OK);
-    assert_eq!(response.body(), "index");
+    assert_eq!(*response.body(), "index".to_string().into_bytes());
     assert!(env.params().is_empty());
 }
 
@@ -81,7 +81,7 @@ fn test_routing_for_first_level() {
     let mut env = env::Env::new();
     let response = env.exec("/about");
     assert_eq!(response.status(), http::StatusCode::OK);
-    assert_eq!(response.body(), "about");
+    assert_eq!(*response.body(), "about".to_string().into_bytes());
     assert!(env.params().is_empty());
 }
 
@@ -90,7 +90,7 @@ fn test_routing_for_first_level_with_children() {
     let mut env = env::Env::new();
     let response = env.exec("/projects");
     assert_eq!(response.status(), http::StatusCode::OK);
-    assert_eq!(response.body(), "projects");
+    assert_eq!(*response.body(), "projects".to_string().into_bytes());
     assert!(env.params().is_empty());
 }
 
@@ -99,7 +99,7 @@ fn test_routing_for_second_level_first() {
     let mut env = env::Env::new();
     let response = env.exec("/projects/project1");
     assert_eq!(response.status(), http::StatusCode::OK);
-    assert_eq!(response.body(), "project1");
+    assert_eq!(*response.body(), "project1".to_string().into_bytes());
     assert!(env.params().is_empty());
 }
 
@@ -108,7 +108,7 @@ fn test_routing_for_second_level_last() {
     let mut env = env::Env::new();
     let response = env.exec("/projects/project2");
     assert_eq!(response.status(), http::StatusCode::OK);
-    assert_eq!(response.body(), "project2");
+    assert_eq!(*response.body(), "project2".to_string().into_bytes());
     assert!(env.params().is_empty());
 }
 

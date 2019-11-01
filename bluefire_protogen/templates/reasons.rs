@@ -48,15 +48,15 @@
     }
 
     {# TODO: Remove this `impl`. Responses should be constructed from `*Response`s only. #}
-    impl From<{{ name }}> for http::Response<String> {
-        fn from(reason: {{ name }}) -> http::Response<String> {
+    impl From<{{ name }}> for bluefire_backend::Response {
+        fn from(reason: {{ name }}) -> bluefire_backend::Response {
             let mut value = serde_json::Map::new();
             value.insert("result".to_string(), serde_json::Value::String("{{ reason.variant.as_str() }}".to_string()));
             value.insert("content".to_string(), serde_json::to_value(&reason).expect("Serialize response to JSON Value"));
 
             http::response::Builder::new()
                 .status(reason.get_code())
-                .body(serde_json::to_string(&value).expect("Serialize response to JSON"))
+                .body(serde_json::to_string(&value).expect("Serialize response to JSON").into_bytes())
                 .expect("Build response")
         }
     }

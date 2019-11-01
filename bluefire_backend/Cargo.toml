@@ -18,6 +18,7 @@ fetch = ["reqwest"]
 rest = ["serde", "serde_derive", "serde_json", "bluefire_twine"]
 router = []
 scheduler = []
+static_files = []
 server = ["futures", "hyper"]
 translations = ["bluefire_translations"]
 

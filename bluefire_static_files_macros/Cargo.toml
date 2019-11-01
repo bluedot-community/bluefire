@@ -1,5 +1,5 @@
 [package]
-name = "bluefire_macros"
+name = "bluefire_static_files_macros"
 version = "0.1.0"
 authors = ["Wojciech Kluczka <wojciech.kluczka@gmail.com>"]
 edition = "2018"
@@ -11,4 +11,6 @@ proc-macro = true
 [dependencies]
 proc-macro2 = "1.0.4"
 syn = { "version" = "1.0.5", features = ["full"] }
-quote = "1.0.2"
+askama = "0.8.0"
+bluefire_build = "0.1.0"
+bluefire_static_files_core = "0.1.0"

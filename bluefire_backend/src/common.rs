@@ -11,8 +11,8 @@ use crate::context::BlueFire;
 
 // -------------------------------------------------------------------------------------------------
 
-/// Type of the request bodies.
-pub type Body = String;
+/// Type of the request and response bodies.
+pub type Body = Vec<u8>;
 
 /// Type of the HTTP request.
 pub type Request = http::Request<Body>;

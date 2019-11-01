@@ -71,7 +71,7 @@ pub mod element {
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
 
-    use super::traits::{RawElement, prelude::*};
+    use super::traits::{prelude::*, RawElement};
 
     /// Represents a view into a generic HTML element.
     #[derive(Clone)]
@@ -134,7 +134,6 @@ pub mod element {
                 None
             };
             Self { element }
-
         }
 
         /// Constructs a new `Element` for and existing element with the given ID.
@@ -231,7 +230,7 @@ pub mod element {
         }
 
         /// Returns the text content of an element.
-        pub fn get_text(&self) ->  Option<String> {
+        pub fn get_text(&self) -> Option<String> {
             if let Some(ref element) = self.element {
                 element.text_content()
             } else {
@@ -397,7 +396,7 @@ pub mod input {
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
 
-    use super::traits::{RawElement, prelude::*};
+    use super::traits::{prelude::*, RawElement};
 
     /// Represents a view into an HTML `input` element.
     #[derive(Clone)]
@@ -535,7 +534,9 @@ pub mod input {
         /// Sets a callback to be executed when the `enter` key is released.
         pub fn on_enter(&self, callback: Box<dyn Fn(web_sys::KeyboardEvent)>) {
             self.on_keyup(Box::new(move |event: web_sys::KeyboardEvent| {
-                if event.key_code() == 13 { callback(event) }
+                if event.key_code() == 13 {
+                    callback(event)
+                }
             }));
         }
     }
@@ -546,7 +547,7 @@ pub mod input {
 pub mod select {
     use wasm_bindgen::JsCast;
 
-    use super::traits::{RawElement, prelude::*};
+    use super::traits::{prelude::*, RawElement};
 
     /// Represents a view into an HTML `select` element.
     #[derive(Clone)]
@@ -606,7 +607,7 @@ pub mod select {
 mod textarea {
     use wasm_bindgen::JsCast;
 
-    use super::traits::{RawElement, prelude::*};
+    use super::traits::{prelude::*, RawElement};
 
     /// Represents a view into an HTML `textarea` element.
     #[derive(Clone)]
@@ -673,7 +674,7 @@ mod textarea {
 mod data_list {
     use wasm_bindgen::JsCast;
 
-    use super::traits::{RawElement, prelude::*};
+    use super::traits::{prelude::*, RawElement};
 
     /// Represents a view into an HTML `datalist` element.
     #[derive(Clone)]

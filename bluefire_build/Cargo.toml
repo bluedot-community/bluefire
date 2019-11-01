@@ -1,0 +1,11 @@
+[package]
+name = "bluefire_build"
+version = "0.1.0"
+authors = ["Wojciech Kluczka <wojciech.kluczka@gmail.com>"]
+edition = "2018"
+publish = false
+
+[dependencies]
+bluefire_static_files_core = "0.1.0"
+minifier = "0.0.33"
+

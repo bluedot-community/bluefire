@@ -45,8 +45,7 @@ impl BlueFireService {
 
 impl BlueFireService {
     fn repack_request(parts: http::request::Parts, data: Vec<u8>) -> common::Request {
-        let new_body = String::from_utf8(data).unwrap();
-        http::Request::from_parts(parts, new_body)
+        http::Request::from_parts(parts, data)
     }
 
     fn repack_response(resp: common::Response) -> http::Response<hyper::Body> {

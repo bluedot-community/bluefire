@@ -1,0 +1,636 @@
+
+// LAYOUT
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    font-family: ubuntu, droid sans, sans-serif;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: $color_back_body;
+}
+
+.bd-main {
+    max-width: 800px;
+    margin: auto;
+    display: block;
+}
+
+.bd-full-main {
+    width: 100%;
+    display: block;
+    margin: 0;
+    padding: 1ex;
+}
+
+// ELEMENTS
+
+a {
+    color: $color_text_special;
+}
+
+table {
+    width: 100%;
+}
+
+// STYLES
+
+.bd-attention-text {
+    color: red;
+}
+
+.bd-major-text {
+    font-weight: bold;
+    color: $color_text_main;
+    font-size: 105%;
+    margin: 0.5ex 0 0.5ex 0;
+}
+
+.bd-note-text {
+    color: $color_text_faint;
+    font-size: 75%;
+}
+
+.bd-hidden {
+    display: none;
+}
+
+.bd-center {
+    text-align: center;
+}
+
+// CONTAINERS
+
+%bd-visible-box {
+    background-color: $color_back_main;
+    border-style: solid;
+    border-width: 0 0 5px 0;
+    border-color: $color_back_extra;
+}
+
+// Regular box
+.bd-box {
+    @extend %bd-visible-box;
+    padding: 1em;
+    width: 100%;
+    position: relative;
+}
+
+// Stretching box
+.bd-sbox {
+    @extend %bd-visible-box;
+    padding: 1em;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    position: relative;
+    flex-grow: 1;
+}
+
+// Transparent box
+.bd-tbox {
+    margin: 0;
+    width: 100%;
+    padding: 1ex 1em;
+    position: relative;
+}
+
+// NAVBAR
+
+.bd-navbar {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 0 1ex 0;
+    background-color: $color_back_extra;
+    color: $color_text_extra;
+
+    ul {
+        margin: 0;
+        padding: 0;
+    }
+
+    li {
+        display: inline-block;
+        font-weight: bold;
+        padding: 1ex 1em;
+    }
+
+    a {
+        text-decoration: none;
+        color: $color_text_extra;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+// TAGS
+
+// Container for tag widgets
+.bd-tag-area {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    border: solid 1px $color_frame;
+    border-radius: 6px;
+    margin: 0;
+    padding: 2px;
+    width: 100%;
+    min-height: 1em;
+    max-height: 20em;
+    overflow: auto;
+}
+
+// Tag
+.bd-tag,
+.bd-tag-area > * {
+    display: inline-block;
+    border: solid 1px;
+    margin: 2px;
+    padding: 3px;
+    border-radius: 3px;
+    cursor: pointer;
+    color: $color_text_main;
+    background-color: $color_back_light;
+    border-color: $color_back_extra;
+}
+
+// WIDGETS
+
+// Titles of boxes
+.bd-title {
+    display: block;
+    font-family: palatino, droid serif, serif;
+    font-weight: bold;
+    font-size: 110%;
+    margin: 0 0 1ex 0;
+    color: $color_text_special;
+}
+
+// Buttons
+.bd-button {
+    display: inline-block;
+    padding: 1ex;
+    border: solid 1px;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    background-color: $color_back_extra;
+    border-color: $color_back_extra;
+    color: $color_text_extra;
+    margin: 0.5ex 0;
+
+    &:hover {
+        background-color: $color_back_extra;
+    }
+}
+
+// Text entries
+%bd-entry {
+    display: inline-block;
+    border: solid 1px $color_frame;
+    outline: solid 1px $color_trans;
+    width: 100%;
+    margin: 0.5ex 0;
+
+    &:focus {
+        outline-color: $color_back_extra;
+        border-color: $color_back_extra;
+    }
+}
+
+.bd-field {
+    @extend %bd-entry;
+    padding: 1ex;
+}
+
+.bd-textarea-small {
+    @extend %bd-entry;
+    padding: 0.5ex;
+    height: 5em;
+    resize: none;
+}
+
+.bd-textarea-big {
+    @extend %bd-entry;
+    padding: 0.5ex;
+    min-height: 10em;
+    resize: none;
+    flex-grow: 1;
+}
+
+// HELP
+
+.bd-help {
+    display: inline-block;
+    position: relative;
+    margin: 0.5ex;
+    border: 0.3ex solid $color_back_extra;
+    background-color: $color_back_extra;
+    color: $color_text_extra;
+    border-radius: 1em;
+    text-align: center;
+    width: 2em;
+    height: 2em;
+
+    &:after {
+        content: "？";
+        font-size: 120%;
+        font-weight: bold;
+    }
+
+    &:hover {
+        .bd-help-left {
+            display: inline-block;
+        }
+        .bd-help-center {
+            display: inline-block;
+        }
+        .bd-help-right {
+            display: inline-block;
+        }
+    }
+
+    %bd-help-text {
+        display: none;
+        position: absolute;
+        border: 1ex solid black;
+        background-color: black;
+        color: white;
+        text-align: left;
+        font-size: 90%;
+        min-width: 20em;
+        top: 100%;
+        z-index: 100;
+
+        &:hover {
+            display: inline-block;
+        }
+    }
+
+    .bd-help-left {
+        @extend %bd-help-text;
+        right: 0;
+    }
+
+    .bd-help-center {
+        @extend %bd-help-text;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .bd-help-right {
+        @extend %bd-help-text;
+        left: 0;
+    }
+}
+
+// LOADER
+
+%bd-loader {
+    font-size: 0;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    border-color: $color_back_extra #f3f3f3 #f3f3f3 #f3f3f3;
+    background-color: #fff0;
+}
+
+// Small, inline loader/spinner
+.bd-loader-small {
+    @extend %bd-loader;
+    display: inline-block;
+    border-width: 4px;
+    border-style: solid;
+    width: 25px;
+    height: 25px;
+}
+
+// Big, block loader/spinner
+.bd-loader-big {
+    @extend %bd-loader;
+    display: block;
+    border-width: 16px;
+    border-style: solid;
+    margin: auto;
+    width: 100px;
+    height: 100px;
+}
+
+%bd-overlay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+// Semi-translatent overlay with absolute position for use with the big loader
+.bd-overlay {
+    @extend %bd-overlay;
+    position: absolute;
+    background: #ffffff66;
+}
+
+// Almost opaque overlay with fixed position for use with pop-up elements
+.bd-overlay-fixed {
+    @extend %bd-overlay;
+    position: fixed;
+    background: #f8f8f8e8;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+// SETTINGS
+
+// Widget for packing setting pannels in a grid
+.bd-settings {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    grid-gap: 1ex;
+    margin: 1ex 0;
+
+    label {
+        display: inline-block;
+        color: dimgray;
+        padding: 1ex;
+        border: solid;
+        border-width: 0 1px 0 0;
+        border-color: dimgray;
+        justify-self: end;
+        align-self: start;
+        text-align: right;
+        height: 100%;
+    }
+
+    p {
+        display: inline-block;
+        padding: 1ex 0;
+        margin: 0;
+    }
+}
+
+// ELEMENTS
+
+// Widget for displaying a list of elements
+.bd-elements {
+    display: block;
+    padding: 0;
+
+    > li {
+        display: block;
+        padding: 1ex;
+        border-style: solid;
+        border-width: 0 0 1px 0;
+        border-color: $color_back_extra;
+
+        &:hover a {
+            color: black;
+        }
+    }
+
+    a {
+        text-decoration: none;
+        color: black;
+        cursor: pointer;
+    }
+}
+
+// Action buttons shown for each `element`
+.bd-elements-buttons {
+    display: inline;
+    float: right;
+    font-size: 80%;
+
+    a {
+        padding: 1ex;
+        color: $color_text_faint;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+// TABS and CARDS
+
+// Container for tabs
+.bd-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: space-evenly;
+    width: 100%;
+}
+
+%bd-tab {
+    flex-grow: 1;
+    padding: 1ex;
+
+    &:hover {
+        background-color: $color_detail;
+        cursor: pointer;
+    }
+}
+
+// Active tab
+.bd-tab-active {
+    @extend %bd-tab;
+    border-style: solid;
+    border-width: 5px 1px 0 1px;
+    border-color: $color_back_extra $color_frame $color_trans $color_frame;
+}
+
+// Inactive tab
+.bd-tab-inactive {
+    @extend %bd-tab;
+    color: $color_text_faint;
+    border-style: solid;
+    border-width: 5px 1px 1px 1px;
+    border-color: $color_trans $color_trans $color_frame $color_trans;
+
+    &:hover {
+        border-color: $color_detail $color_detail $color_frame $color_detail;
+    }
+}
+
+// Container for cards
+.bd-cards {
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: 100%;
+    width: 100%;
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+%bd-card {
+    width: 100%;
+    padding: 1ex;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 1;
+    grid-row-end: 2;
+    border-style: solid;
+    border-width: 0 0 0 1px;
+    border-color: $color_trans $color_trans $color_trans $color_frame;
+}
+
+// Active (visible) card
+.bd-card-active {
+    @extend %bd-card;
+    display: block;
+    visibility: visible;
+}
+
+// Active (invisible) card
+.bd-card-inactive {
+    @extend %bd-card;
+    display: block;
+    visibility: hidden;
+}
+
+// COMMUNICATES
+
+.bd-communicates {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    max-width: 400px;
+}
+
+.bd-error {
+    border: solid 2px red;
+    margin: 0.5em;
+    padding: 0.5em;
+    background: #faa;
+}
+
+.bd-warning {
+    border: solid 2px orange;
+    margin: 0.5em;
+    padding: 0.5em;
+    background: #fea;
+}
+
+.bd-close-button::before {
+    float: right;
+    content: "✖";
+    font-size: 150%;
+    margin: -0.3em 0 0 0;
+    padding: 0 0.2em 0 0.2em;
+    cursor: pointer;
+}
+
+// FOOTER
+
+footer {
+    padding: 1ex;
+    text-align: center;
+    color: $color_text_faint;
+    font-size: 80%;
+}
+
+// LAYOUTS
+
+.bd-expand {
+    width: 100%;
+    height: 100%;
+}
+
+.bd-rows {
+    display: grid;
+    grid-gap: 1em;
+    width: 100%;
+}
+
+.bd-columns {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+}
+
+%bd-layout {
+    display: grid;
+    grid-gap: 0.5ex;
+    width: 100%;
+}
+
+%bd-horizontal {
+    @extend %bd-layout;
+    grid-auto-flow: column dense;
+    justify-items: center;
+    align-items: center;
+}
+
+%bd-vertical {
+    @extend %bd-layout;
+    grid-auto-flow: row dense;
+    justify-items: center;
+    align-items: center;
+}
+
+.bd-horizontal {
+    @extend %bd-horizontal;
+    justify-content: stretch;
+}
+
+.bd-horizontal-left {
+    @extend %bd-horizontal;
+    justify-content: left;
+}
+
+.bd-horizontal-right {
+    @extend %bd-horizontal;
+    justify-content: end;
+}
+
+.bd-horizontal-center {
+    @extend %bd-horizontal;
+    justify-content: center;
+}
+
+.bd-vertical {
+    @extend %bd-vertical;
+    justify-content: stretch;
+}
+
+.bd-vertical-left {
+    @extend %bd-vertical;
+    justify-content: start;
+}
+
+.bd-vertical-right {
+    @extend %bd-vertical;
+    justify-content: end;
+}
+
+.bd-float-right {
+    float: right;
+}
+
+// MAPS
+
+.bd-map {
+    width: 100%;
+    height: 100%;
+    min-height: 300px;
+    margin: 1ex 0;
+}
+

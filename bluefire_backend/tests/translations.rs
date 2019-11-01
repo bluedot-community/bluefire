@@ -23,7 +23,7 @@ mod env {
     }
 
     pub fn build_request(languages: &str) -> Request {
-        let mut request = Request::new(String::default());
+        let mut request = Request::new(Vec::new());
         let headers = request.headers_mut();
         let header_value = http::header::HeaderValue::from_str(languages).unwrap();
         headers.insert(http::header::ACCEPT_LANGUAGE, header_value);

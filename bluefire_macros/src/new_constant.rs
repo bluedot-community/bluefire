@@ -38,7 +38,7 @@ struct Code {
 
 // -------------------------------------------------------------------------------------------------
 
-fn parse_attibutes(attributes: proc_macro2::TokenStream) -> Config {
+fn parse_attributes(attributes: proc_macro2::TokenStream) -> Config {
     let mut config = Config::default();
     if !attributes.is_empty() {
         let meta: syn::Meta = syn::parse2(attributes).expect("failed to parse attributes");
@@ -110,7 +110,7 @@ pub fn new_constant(
 ) -> proc_macro::TokenStream {
     let attibutes = proc_macro2::TokenStream::from(attributes);
     let input = proc_macro2::TokenStream::from(input);
-    let config = parse_attibutes(attibutes);
+    let config = parse_attributes(attibutes);
     let code = parse_input(input.clone());
     let struct_name = &code.struct_name;
     let fields = make_fields_code(&config, &code);
