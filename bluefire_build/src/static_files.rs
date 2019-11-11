@@ -119,8 +119,10 @@ impl FileProcessor {
         path.push(crate::cargo::compilation_mode());
         path.push(&input_base_name);
         path.set_extension("wasm");
+        let path_str = utils::path_to_str(&path);
+        println!("cargo:rerun-if-changed={}", path_str);
 
-        crate::commands::wasm_bindgen::WasmBindgen::new(utils::path_to_str(&path))
+        crate::commands::wasm_bindgen::WasmBindgen::new(path_str)
             .target(crate::commands::wasm_bindgen::Target::NoModules)
             .outdir(utils::path_to_str(&crate::cargo::get_out_dir()))
             .run();
