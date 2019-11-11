@@ -17,6 +17,13 @@ elements_select = ["elements"]
 elements_textarea = ["elements"]
 elements_data_list = ["elements"]
 
+widgets = ["elements", "maud"]
+widgets_all = ["widgets_communicates", "widgets_list", "widgets_overlay", "widgets_tag_area"]
+widgets_communicates = ["widgets"]
+widgets_list = ["widgets"]
+widgets_overlay = ["widgets"]
+widgets_tag_area = ["widgets"]
+
 authentication = ["cookies"]
 cookies = ["chrono", "web-sys", "wasm-bindgen", "web"]
 fetch = ["js-sys", "web-sys", "authentication", "bluefire_twine"]

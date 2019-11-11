@@ -6,11 +6,10 @@
 
 #![warn(missing_docs)]
 
+pub mod class_names;
 pub mod constants;
 pub mod id;
 pub mod message;
 pub mod validation;
 
-pub use crate::id::Id;
-pub use crate::message::Message;
-pub use crate::validation::ValidationResult;
+pub use crate::{class_names::ClassNames, id::Id, message::Message, validation::ValidationResult};

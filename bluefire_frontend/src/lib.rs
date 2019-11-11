@@ -27,6 +27,9 @@ pub mod flowex;
 #[cfg(feature = "elements")]
 pub mod elements;
 
+#[cfg(feature = "widgets")]
+pub mod widgets;
+
 #[cfg(feature = "cookies")]
 pub mod cookies;
 

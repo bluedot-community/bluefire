@@ -225,7 +225,7 @@ pub enum TypeRepr {
         members: Vec<Member>,
     },
 
-    /// Enum (one of predefined string values).
+    /// An enum (one of predefined string values).
     #[serde(rename = "enum")]
     Enum {
         /// A list of values.
