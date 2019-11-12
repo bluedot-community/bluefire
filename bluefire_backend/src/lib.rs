@@ -4,6 +4,7 @@
 //! Back-end part of `BlueFire` web framework.
 
 #![feature(associated_type_defaults)]
+#![feature(proc_macro_hygiene)]
 #![warn(missing_docs)]
 
 #[macro_use]
@@ -47,3 +48,6 @@ pub mod background;
 
 #[cfg(feature = "fetch")]
 pub mod fetch;
+
+#[cfg(feature = "widgets")]
+pub mod widgets;
